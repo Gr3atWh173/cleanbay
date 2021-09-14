@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
 
-from . import abstract_plugin
-from . import torrent
+from .. import abstract_plugin
+from .. import torrent
 
 class CBPlugin(abstract_plugin.AbstractPlugin):
   def verify_cbplugin(self):

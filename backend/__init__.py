@@ -90,7 +90,7 @@ class Backend:
 
   def load_config(self):
     try:
-      with open('./config.py', 'rt', encoding='utf-8') as f:
+      with open('./config.json', 'rt', encoding='utf-8') as f:
         self.config = json.loads(f.read())
     except EnvironmentError:
       # fallback settings
@@ -101,7 +101,7 @@ class Backend:
 
   def load_plugins(self):
     modules = glob.glob(self.config['pluginsDirectory'] + '/*.py')
-    maybe_plugins = [ import_module('plugins.' + basename(f)[:-3]).CBPlugin() for f in modules
+    maybe_plugins = [ import_module('backend.plugins.' + basename(f)[:-3]).CBPlugin() for f in modules
       if isfile(f) and not (f.endswith('__init__.py') or f.endswith('abstract_plugin.py') or f.endswith('torrent.py')) ]
 
     # filter these based on if they have a 'verify_cbplugin' method

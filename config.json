@@ -1,4 +1,4 @@
 {
-	"pluginsDirectory": "./plugins",
+	"pluginsDirectory": "./backend/plugins",
 	"cacheSize": 128
 }
