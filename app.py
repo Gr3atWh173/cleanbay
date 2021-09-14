@@ -7,9 +7,9 @@ back = Backend()
 
 print(back.config, back.plugins)
 
-back.search("Star trek")
-back.search("Star wars")
-back.search("Fast and the Furious")
-back.search("Star Trek")
+back.search("dont breathe")
+back.search("god of war")
+back.search("f9")
+back.search("god of war")
 
 print(back.cache)
