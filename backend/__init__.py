@@ -61,15 +61,19 @@ class Backend:
 
     Keyword Arguments:
     search_param -- the string to search for'''
+    results = self.search_plugins(search_param, except_plugins=[])
+    if not results:
+      return results
+
     if self.config['cacheSize'] < len(self.cache):
       del self.cache[self.least_frequently_used()]
 
     self.cache[search_param] = {
-      'listings': self.search_plugins(search_param, except_plugins=[]),
+      'listings': results,
       'hit_count': 1
     }
 
-    return self.cache[search_param]['listings']
+    return results
 
   def search_plugins(self, search_param:str, except_plugins:list) -> list:
     '''Searches all plugins except the ones passed in `except_plugins`
@@ -81,7 +85,7 @@ class Backend:
     for name, plugin in self.plugins.items():
       if name in except_plugins:
         continue
-      results.append(plugin.search(search_param))
+      results.extend(plugin.search(search_param))
 
     return results
 
