@@ -28,7 +28,6 @@ class Backend:
     The returned tuple contains a list of Torrent objects and a boolean
     indicating if the results were fetched from the cache
 
-
     Keyword Arguments:
     search_param -- the string to search for'''
     if not self.plugins:
@@ -43,7 +42,6 @@ class Backend:
     '''Return the listings if they exist in the cache
     Otherwise returns an empty list
 
-
     Keyword Arguments:
     search_param -- the string to search for'''
     if search_param in self.cache:
@@ -57,7 +55,6 @@ class Backend:
 
     If the cache has grown more than the size specified in the config
     file - deletes the least frequently used entry and replaces it.
-
 
     Keyword Arguments:
     search_param -- the string to search for'''
