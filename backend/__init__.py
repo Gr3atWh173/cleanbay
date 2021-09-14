@@ -62,7 +62,7 @@ class Backend:
     if not results:
       return results
 
-    if self.config['cacheSize'] < len(self.cache):
+    if self.config['cacheSize'] <= len(self.cache):
       del self.cache[self.least_frequently_used()]
 
     self.cache[search_param] = {
