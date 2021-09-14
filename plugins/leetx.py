@@ -28,6 +28,7 @@ class CBPlugin(abstract_plugin.AbstractPlugin):
     for row in table[0].findChildren('tr')[1:]:
       torrents.append(torrent.Torrent(
           row.findChildren('td')[0].findChildren('a')[1].text,
+          # TODO(gr3atwh173): make this the actual magnet link, not the link to the page on 1337x
           row.findChildren('td')[0].findChildren('a')[1]['href'],
           int(row.findChildren('td')[1].text),
           int(row.findChildren('td')[2].text),
