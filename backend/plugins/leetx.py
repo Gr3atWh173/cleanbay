@@ -1,10 +1,10 @@
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
 
-from .. import abstract_plugin
-from .. import torrent
+from ..abstract_plugin import AbstractPlugin
+from ..torrent import Torrent
 
-class CBPlugin(abstract_plugin.AbstractPlugin):
+class CBPlugin(AbstractPlugin):
   def verify_cbplugin(self):
     return True
 
@@ -26,7 +26,7 @@ class CBPlugin(abstract_plugin.AbstractPlugin):
 
     torrents = []
     for row in table[0].findChildren('tr')[1:]:
-      torrents.append(torrent.Torrent(
+      torrents.append(Torrent(
           row.findChildren('td')[0].findChildren('a')[1].text,
           # TODO(gr3atwh173): make this the actual magnet link, not the link to the page on 1337x
           row.findChildren('td')[0].findChildren('a')[1]['href'],
