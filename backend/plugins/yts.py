@@ -32,7 +32,9 @@ class CBPlugin(AbstractPlugin):
     torrents = []
     for element in resp['data']['movies']:
       max_seed_torrent = max(
-        element['torrents'], key=lambda x: x['seeds'])
+        element['torrents'],
+        key=lambda x: x['seeds']
+      )
       torrents.append(Torrent(
         element['title'],
         self.make_magnet(element['title'], max_seed_torrent['hash']),
