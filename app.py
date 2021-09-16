@@ -7,5 +7,5 @@ back = Backend()
 
 print(back.config, back.plugins)
 
-print(back.search_plugin("shrek", "yts"))
+print(back.search_plugin("game of thrones", "eztv"))
 
