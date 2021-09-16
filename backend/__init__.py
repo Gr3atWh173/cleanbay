@@ -5,9 +5,11 @@ from os.path import isfile, basename
 import glob
 from typing import Tuple
 
+
 class NoPluginsError(Exception):
   '''Indicates that no usable plugins could be loaded.'''
   pass
+
 
 class Backend:
   '''The main class for this module. Handles all the behind-the-scenes logic
@@ -21,7 +23,7 @@ class Backend:
     self.load_config()
     self.load_plugins()
 
-  def search(self, search_param:str) -> Tuple:
+  def search(self, search_param: str) -> Tuple:
     '''Returns cached results if any. If not, performs a fresh search,
     updates the cache and returns the results.
 
@@ -38,7 +40,7 @@ class Backend:
       return (results, True)
     return (self.update_cache(search_param), False)
 
-  def try_cache(self, search_param:str) -> list:
+  def try_cache(self, search_param: str) -> list:
     '''Return the listings if they exist in the cache
     Otherwise returns an empty list
 
@@ -50,7 +52,7 @@ class Backend:
 
     return []
 
-  def update_cache(self, search_param:str) -> list:
+  def update_cache(self, search_param: str) -> list:
     '''Updates the cache.
 
     If the cache has grown more than the size specified in the config
@@ -66,13 +68,13 @@ class Backend:
       del self.cache[self.least_frequently_used()]
 
     self.cache[search_param] = {
-      'listings': results,
-      'hit_count': 1
+        'listings': results,
+        'hit_count': 1
     }
 
     return results
 
-  def search_plugins(self, search_param:str, except_plugins:list) -> list:
+  def search_plugins(self, search_param: str, except_plugins: list) -> list:
     '''Searches all plugins except the ones passed in `except_plugins`
 
     Keyword Arguments:
@@ -86,10 +88,10 @@ class Backend:
 
     return results
 
-  def search_plugin(self, search_param:str, plugin_name:str) -> list:
-    """Search a single plugin and return the results.
+  def search_plugin(self, search_param: str, plugin_name: str) -> list:
+    '''Search a single plugin and return the results.
     Meant to serve as a way of testing new plugins. Would probably not
-    make it to the final release."""
+    make it to the final release.'''
     return self.plugins[plugin_name].search(search_param)
 
   def least_frequently_used(self):
@@ -102,14 +104,14 @@ class Backend:
     except EnvironmentError:
       # fallback settings
       self.config = {
-        'pluginsDirectory': './plugins',
-        'cacheSize': 128
+          'pluginsDirectory': './plugins',
+          'cacheSize': 128
       }
 
   def load_plugins(self):
     modules = glob.glob(self.config['pluginsDirectory'] + '/*.py')
-    maybe_plugins = [ import_module('backend.plugins.' + basename(f)[:-3]).CBPlugin() for f in modules
-      if isfile(f) and not (f.endswith('__init__.py') or f.endswith('abstract_plugin.py') or f.endswith('torrent.py')) ]
+    maybe_plugins = [import_module('backend.plugins.' + basename(f)[:-3]).CBPlugin() for f in modules
+                     if isfile(f) and not (f.endswith('__init__.py') or f.endswith('abstract_plugin.py') or f.endswith('torrent.py'))]
 
     # filter these based on if they have a 'verify_cbplugin' method
     for plugin in maybe_plugins:

@@ -4,11 +4,12 @@ from urllib.parse import quote as uri_quote
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent
 
+
 class CBPlugin(AbstractPlugin):
   def __init__(self):
     self.session = requests.Session()
     self.session.headers.update({
-      'user-agent': self.info()['user-agent']
+        'user-agent': self.info()['user-agent']
     })
 
   def verify_cbplugin(self):
@@ -16,9 +17,9 @@ class CBPlugin(AbstractPlugin):
 
   def info(self):
     return {
-      'name': 'piratebay',
-      'domain': 'https://apibay.org',
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
+        'name': 'piratebay',
+        'domain': 'https://apibay.org',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
     }
 
   def verify_status(self):
@@ -34,13 +35,13 @@ class CBPlugin(AbstractPlugin):
     torrents = []
     for element in resp.json():
       torrents.append(Torrent(
-        element['name'],
-        self.make_magnet(element['info_hash'], element['name']),
-        element['seeders'],
-        element['leechers'],
-        element['size'],
-        element['username'],
-        element['added']
+          element['name'],
+          self.make_magnet(element['info_hash'], element['name']),
+          element['seeders'],
+          element['leechers'],
+          element['size'],
+          element['username'],
+          element['added']
       ))
 
     return torrents

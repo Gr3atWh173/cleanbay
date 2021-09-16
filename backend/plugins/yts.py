@@ -4,6 +4,7 @@ from urllib.parse import quote as uri_quote
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent
 
+
 class CBPlugin(AbstractPlugin):
   def __init__(self):
     self.s = requests.Session()
@@ -17,9 +18,9 @@ class CBPlugin(AbstractPlugin):
 
   def info(self) -> dict:
     return {
-      'name': 'yts',
-      'api_url': 'https://yts.mx/api/v2/list_movies.json?query_term=',
-      'domain': 'https://yts.mx'
+        'name': 'yts',
+        'api_url': 'https://yts.mx/api/v2/list_movies.json?query_term=',
+        'domain': 'https://yts.mx'
     }
 
   def search(self, search_param):
@@ -32,17 +33,17 @@ class CBPlugin(AbstractPlugin):
     torrents = []
     for element in resp['data']['movies']:
       max_seed_torrent = max(
-        element['torrents'],
-        key=lambda x: x['seeds']
+          element['torrents'],
+          key=lambda x: x['seeds']
       )
       torrents.append(Torrent(
-        element['title'],
-        self.make_magnet(element['title'], max_seed_torrent['hash']),
-        max_seed_torrent['seeds'],
-        max_seed_torrent['peers'],
-        max_seed_torrent['size'],
-        'yts',
-        max_seed_torrent['date_uploaded'].split(' ')[0]
+          element['title'],
+          self.make_magnet(element['title'], max_seed_torrent['hash']),
+          max_seed_torrent['seeds'],
+          max_seed_torrent['peers'],
+          max_seed_torrent['size'],
+          'yts',
+          max_seed_torrent['date_uploaded'].split(' ')[0]
       ))
 
     return torrents

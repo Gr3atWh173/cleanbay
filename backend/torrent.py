@@ -1,6 +1,7 @@
 """contains the `Torrent` data class"""
 from dataclasses import dataclass
 
+
 @dataclass
 class Torrent():
   """
