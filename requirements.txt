@@ -1,0 +1,13 @@
+aiohttp==3.7.4.post0
+Airshare==0.1.6
+altgraph==0.17
+appdirs==1.4.3
+APScheduler==3.6.3
+astroid==2.7.3
+async-timeout==3.0.1
+asyncio==3.4.3
+attrs==20.2.0
+Automat==20.2.0
+beautifulsoup4==4.9.3
+lxml==4.5.0
+requests==2.22.0
