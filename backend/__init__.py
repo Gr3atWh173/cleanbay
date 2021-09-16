@@ -111,7 +111,7 @@ class Backend:
   def load_plugins(self):
     modules = glob.glob(self.config['pluginsDirectory'] + '/*.py')
     maybe_plugins = [import_module('backend.plugins.' + basename(f)[:-3]).CBPlugin() for f in modules
-                     if isfile(f) and not (f.endswith('__init__.py') or f.endswith('abstract_plugin.py') or f.endswith('torrent.py'))]
+                     if isfile(f) and not f.endswith('__init__.py')]
 
     # filter these based on if they have a 'verify_cbplugin' method
     for plugin in maybe_plugins:
