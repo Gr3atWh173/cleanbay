@@ -86,6 +86,12 @@ class Backend:
 
     return results
 
+  def search_plugin(self, search_param:str, plugin_name:str) -> list:
+    """Search a single plugin and return the results.
+    Meant to serve as a way of testing new plugins. Would probably not
+    make it to the final release."""
+    return self.plugins[plugin_name].search(search_param)
+
   def least_frequently_used(self):
     return min(self.cache.items(), key=lambda x: x['hit_count'])
 
