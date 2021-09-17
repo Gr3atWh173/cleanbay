@@ -4,17 +4,17 @@ A metasearch engine for torrents
 ## Current Status
 
 ### Backend
-- Implement plugins [x]
-  - 1337x [x]
-  - The Pirate Bay [x]
-  - YTS [x]
-  - EZTV [x]
-  - More... [ ]
-- Implement async [x]
-- Add support for categories [ ]
+- Implement plugins
+  - [x] 1337x 
+  - [x] The Pirate Bay 
+  - [x] YTS 
+  - [x] EZTV 
+  - [ ] More...
+- [x] Implement async 
+- [ ] Add support for categories
 
 ### Frontend
-- Decide how to approach it [ ]
+- [ ] Decide how to approach it
 
 ### Setup
 1. Clone this repo
