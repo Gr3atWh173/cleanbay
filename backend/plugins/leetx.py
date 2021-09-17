@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup, SoupStrainer
-import requests
 import asyncio
 
 from ..abstract_plugin import AbstractPlugin
@@ -20,7 +19,10 @@ class CBPlugin(AbstractPlugin):
     resp = await session.get(url, headers={'User-Agent': useragent})
 
     strainer = SoupStrainer('table')
-    resp = BeautifulSoup(await resp.text(), features='lxml', parse_only=strainer)
+    resp = BeautifulSoup(
+        await resp.text(),
+        features='lxml',
+        parse_only=strainer)
 
     table = resp.findChildren('table')
     if len(table) == 0:
@@ -30,7 +32,7 @@ class CBPlugin(AbstractPlugin):
     for row in table[0].findChildren('tr')[1:]:
       torrents.append(Torrent(
           row.findChildren('td')[0].findChildren('a')[1].text,
-          # TODO(gr3atwh173): make this the actual magnet link, not the link to the page on 1337x
+          # TODO(gr3atwh173): create a function to get the magnet from this link
           row.findChildren('td')[0].findChildren('a')[1]['href'],
           int(row.findChildren('td')[1].text),
           int(row.findChildren('td')[2].text),

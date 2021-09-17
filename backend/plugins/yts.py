@@ -47,7 +47,7 @@ class CBPlugin(AbstractPlugin):
     return torrents
 
   def make_magnet(self, name, ih):
-    return 'magnet:?xt=urn:btih:'+ih+'&dn='+uri_quote(name)+self.trackers()
+    return f'magnet:?xt=urn:btih:{ih}&dn={uri_quote(name)}{self.trackers()}'
 
   def trackers(self):
     tr = uri_quote('udp://open.demonii.com:1337/announce')

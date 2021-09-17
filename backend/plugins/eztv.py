@@ -19,7 +19,11 @@ class CBPlugin(AbstractPlugin):
     resp = await session.get(url)
 
     strainer = SoupStrainer('table')
-    resp = BeautifulSoup(await resp.text(), features='lxml', parse_only=strainer)
+    resp = BeautifulSoup(
+        
+        await resp.text(),
+        features='lxml',
+        parse_only=strainer)
 
     table = resp.findChildren('table')[4]
     if len(table) == 0:

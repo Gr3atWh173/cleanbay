@@ -4,15 +4,17 @@ from dataclasses import dataclass
 
 @dataclass
 class Torrent():
-  """
-  Members:
-  name -- name/title of the torrent
-  magnet -- the URL of the torrent
-  seeders -- seeders of the torrent
-  leechers -- leechers of the torrent
-  size -- in no particular unit
-  uploader -- who uploaded the torrent
-  uploaded_at -- upload date
+  """Represents a torrent listing.
+
+  Attributes:
+    name (str): name/title of the torrent
+    magnet (str): the URL of the torrent
+    seeders (int|str): seeders of the torrent
+    leechers (int|str): leechers of the torrent
+    size (str): size in no particular unit
+    uploader (str): who uploaded the torrent
+    uploaded_at (str): upload date
+
   """
   name: str
   magnet: str

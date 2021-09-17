@@ -18,11 +18,18 @@ class CBPlugin(AbstractPlugin):
     }
 
   def verify_status(self):
-    return get_sync(self.info()['domain'], headers={'user-agent': self.info()['user-agent']}).status_code != 500
+    domain, useragent = self.info()['domain'], self.info()['user-agent']
+    return get_sync(
+        domain,
+        headers={'user-agent': useragent}
+    ).status_code != 500
 
   async def search(self, session, search_param):
-    domain = self.info()['domain']
-    resp = await session.get(domain + '/q.php?q=' + search_param + '&cat=', headers={'user-agent': self.info()['user-agent']})
+    domain, useragent = self.info()['domain'], self.info()['user-agent']
+
+    resp = await session.get(
+        domain + '/q.php?q=' + search_param + '&cat=',
+        headers={'user-agent': useragent})
 
     if resp.status != 200:
       return []
@@ -41,7 +48,7 @@ class CBPlugin(AbstractPlugin):
     return torrents
 
   def make_magnet(self, ih, name):
-    return 'magnet:?xt=urn:btih:'+ih+'&dn='+uri_quote(name)+self.trackers()
+    return f"magnet:?xt=urn:btih:'{ih}'&dn={uri_quote(name)}{self.trackers()}"
 
   def trackers(self):
     tr = '&tr=' + uri_quote('udp://tracker.coppersurfer.tk:6969/announce')
