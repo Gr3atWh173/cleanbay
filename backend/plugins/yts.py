@@ -1,20 +1,18 @@
-import requests
+from requests import get as get_sync
 from urllib.parse import quote as uri_quote
+import asyncio
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent
 
 
 class CBPlugin(AbstractPlugin):
-  def __init__(self):
-    self.s = requests.Session()
-
   def verify_cbplugin(self) -> bool:
     return True
 
   def verify_status(self) -> bool:
     domain = self.info()['domain']
-    return self.s.get(domain).status_code == 200
+    return get_sync(domain).status_code == 200
 
   def info(self) -> dict:
     return {
@@ -23,9 +21,10 @@ class CBPlugin(AbstractPlugin):
         'domain': 'https://yts.mx'
     }
 
-  def search(self, search_param):
+  async def search(self, session, search_param):
     api_url = self.info()['api_url']
-    resp = self.s.get(api_url + uri_quote(search_param)).json()
+    resp = await session.get(api_url + uri_quote(search_param))
+    resp = await resp.json()
 
     if resp['status'] != 'ok' or resp['data']['movie_count'] == 0:
       return []
@@ -45,7 +44,6 @@ class CBPlugin(AbstractPlugin):
           'yts',
           max_seed_torrent['date_uploaded'].split(' ')[0]
       ))
-
     return torrents
 
   def make_magnet(self, name, ih):

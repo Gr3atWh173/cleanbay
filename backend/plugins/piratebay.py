@@ -1,17 +1,12 @@
-import requests
+from requests import get as get_sync
 from urllib.parse import quote as uri_quote
+import asyncio
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent
 
 
 class CBPlugin(AbstractPlugin):
-  def __init__(self):
-    self.session = requests.Session()
-    self.session.headers.update({
-        'user-agent': self.info()['user-agent']
-    })
-
   def verify_cbplugin(self):
     return True
 
@@ -23,17 +18,17 @@ class CBPlugin(AbstractPlugin):
     }
 
   def verify_status(self):
-    return self.session.get(self.info()['domain']).status_code != 500
+    return get_sync(self.info()['domain'], headers={'user-agent': self.info()['user-agent']}).status_code != 500
 
-  def search(self, search_param):
+  async def search(self, session, search_param):
     domain = self.info()['domain']
-    resp = self.session.get(domain + '/q.php?q=' + search_param + '&cat=')
+    resp = await session.get(domain + '/q.php?q=' + search_param + '&cat=', headers={'user-agent': self.info()['user-agent']})
 
-    if resp.status_code != 200:
+    if resp.status != 200:
       return []
 
     torrents = []
-    for element in resp.json():
+    for element in await resp.json():
       torrents.append(Torrent(
           element['name'],
           self.make_magnet(element['info_hash'], element['name']),
@@ -43,7 +38,6 @@ class CBPlugin(AbstractPlugin):
           element['username'],
           element['added']
       ))
-
     return torrents
 
   def make_magnet(self, ih, name):

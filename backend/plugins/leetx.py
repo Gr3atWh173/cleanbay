@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
+import asyncio
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent
@@ -12,14 +13,14 @@ class CBPlugin(AbstractPlugin):
   def verify_status(self):
     return True
 
-  def search(self, search_param):
+  async def search(self, session, search_param):
     info = self.info()
     domain, useragent = info['domain'], info['user-agent']
     url = f'{domain}/search/{search_param}/1/'
-    resp = requests.get(url, headers={'User-Agent': useragent}).text
+    resp = await session.get(url, headers={'User-Agent': useragent})
 
     strainer = SoupStrainer('table')
-    resp = BeautifulSoup(resp, features='lxml', parse_only=strainer)
+    resp = BeautifulSoup(await resp.text(), features='lxml', parse_only=strainer)
 
     table = resp.findChildren('table')
     if len(table) == 0:

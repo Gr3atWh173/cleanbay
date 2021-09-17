@@ -1,5 +1,7 @@
 '''The module contains the abstract interface for plugins'''
 from abc import ABC
+import asyncio
+import aiohttp
 
 
 class AbstractPlugin(ABC):
@@ -15,8 +17,10 @@ class AbstractPlugin(ABC):
     'False' otherwise.'''
     pass
 
-  def search(self, search_param: str) -> list:
+  async def search(self, session: aiohttp.ClientSession, search_param: str) -> list:
     '''Searches the external service and returns a list of `Torrent` objects.
+
+    Asynchronus!
 
     Keyword Arguments:
     search_param -- the string to search for.
