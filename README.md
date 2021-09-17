@@ -11,7 +11,11 @@ A metasearch engine for torrents
   - [x] EZTV 
   - [ ] More...
 - [x] Implement async 
+<<<<<<< HEAD
 - [ ] Add support for categories
+=======
+- [ ] Add support for categories [ ]
+>>>>>>> a6ceed3d65a5e85f23965892b571ef9744c348bc
 
 ### Frontend
 - [ ] Decide how to approach it
