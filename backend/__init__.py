@@ -4,6 +4,8 @@ from importlib import import_module
 from os.path import isfile, basename
 import glob
 from typing import Tuple
+import asyncio
+import aiohttp
 
 
 class NoPluginsError(Exception):
@@ -49,7 +51,6 @@ class Backend:
     if search_param in self.cache:
       self.cache[search_param]['hit_count'] += 1
       return self.cache[search_param]['listings']
-
     return []
 
   def update_cache(self, search_param: str) -> list:
@@ -71,28 +72,33 @@ class Backend:
         'listings': results,
         'hit_count': 1
     }
-
     return results
 
-  def search_plugins(self, search_param: str, except_plugins: list) -> list:
+  async def search_plugins(self, search_param: str, except_plugins: list) -> list:
     '''Searches all plugins except the ones passed in `except_plugins`
+
+    Asynchronus!
 
     Keyword Arguments:
     search_param -- the string to search for
     except_plugins -- the plugins to skip (default is [])'''
     results = []
+    async with aiohttp.ClientSession() as session:
+      tasks = self.create_search_tasks(session, search_param, except_plugins)
+      results = await asyncio.gather(*tasks)
+    return self.flatten(results)
+
+  def create_search_tasks(self, session: aiohttp.ClientSession, search_param: str, except_plugins: list) -> list:
+    tasks = []
     for name, plugin in self.plugins.items():
       if name in except_plugins:
         continue
-      results.extend(plugin.search(search_param))
+      task = asyncio.create_task(plugin.search(session, search_param))
+      tasks.append(task)
+    return tasks
 
-    return results
-
-  def search_plugin(self, search_param: str, plugin_name: str) -> list:
-    '''Search a single plugin and return the results.
-    Meant to serve as a way of testing new plugins. Would probably not
-    make it to the final release.'''
-    return self.plugins[plugin_name].search(search_param)
+  def flatten(self, t: list) -> list:
+    return [item for sublist in t for item in sublist]
 
   def least_frequently_used(self):
     return min(self.cache.items(), key=lambda x: x['hit_count'])
