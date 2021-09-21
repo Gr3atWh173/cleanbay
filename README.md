@@ -22,15 +22,15 @@ A metasearch engine for torrents
 git clone https://github.com/gr3atwh173/cleanbay.git
 ```
 
-2. Install requirements
+2. Install with [Poetry](https://pypi.org/project/poetry/)
 ```
 cd cleanbay
-pip install -r requirements.txt
+poetry install
 ```
 
 3. Run the web API
 ```
-uvicorn app:app --reload
+poetry run uvicorn app:app --reload
 ```
 
 ### API endpoints
