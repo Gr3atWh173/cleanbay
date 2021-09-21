@@ -14,3 +14,5 @@ requests==2.22.0
 aiohttp==3.7.4.post0
 aiodns==3.0.0
 cchardet==2.1.7
+uvicorn[standard]==0.15.0
+fastapi==0.68.1

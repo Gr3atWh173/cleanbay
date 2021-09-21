@@ -38,8 +38,8 @@ class CBPlugin(AbstractPlugin):
       torrents.append(Torrent(
           element['title'],
           self.make_magnet(element['title'], max_seed_torrent['hash']),
-          max_seed_torrent['seeds'],
-          max_seed_torrent['peers'],
+          int(max_seed_torrent['seeds']),
+          int(max_seed_torrent['peers']),
           max_seed_torrent['size'],
           'yts',
           max_seed_torrent['date_uploaded'].split(' ')[0]

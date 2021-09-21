@@ -20,7 +20,6 @@ class CBPlugin(AbstractPlugin):
 
     strainer = SoupStrainer('table')
     resp = BeautifulSoup(
-        
         await resp.text(),
         features='lxml',
         parse_only=strainer)
@@ -31,10 +30,16 @@ class CBPlugin(AbstractPlugin):
 
     torrents = []
     for row in table.findChildren('tr')[2:]:
+      seeders = row.findChildren('td')[5].text
+      if not seeders.isnumeric():
+        seeders = 0
+      else:
+        seeders = int(seeders)
+
       torrents.append(Torrent(
           row.findChildren('td')[1].text.strip().replace('[eztv]', ''),
           row.findChildren('td')[2].findChildren('a')[0]['href'],
-          row.findChildren('td')[5].text,
+          seeders,
           'N/A',
           row.findChildren('td')[3].text,
           'eztv',

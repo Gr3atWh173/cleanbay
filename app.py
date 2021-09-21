@@ -1,17 +1,28 @@
-"""main"""
+"""Serves the API that enables searching the backend"""
+from fastapi import FastAPI
+from fastapi.encoders import jsonable_encoder
 
-# just a test-bed for now
+#from typing import Optional
+
 from backend import Backend
-import asyncio
-import time
 
-back = Backend()
 
-print(back.config, back.plugins)
+app = FastAPI()
+backend = Backend()
 
-start = time.time()
-results = asyncio.get_event_loop().run_until_complete(back.search_plugins("fast and furious", []))
-elapsed = time.time() - start
-print("async: took {} seconds to search {} plugins.".format(elapsed, len(back.plugins)))
 
-print(results[0])
+@app.get('/')
+def index():
+  return {'status': 'ok'}
+
+
+@app.get('/api/v1/search/{search_query}')
+async def search(search_query: str):
+  (listings, from_cache) = await backend.search(search_query)
+  return {
+    'search_query': search_query,
+    'listings_length': len(listings),
+    'cache_hit': from_cache,
+    'listings': jsonable_encoder(listings)
+  }
+

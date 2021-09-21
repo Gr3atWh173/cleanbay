@@ -39,7 +39,7 @@ class Backend:
     self.load_config()
     self.load_plugins()
 
-  def search(self, search_param: str) -> Tuple:
+  async def search(self, search_param: str) -> Tuple:
     """Searches the loaded plugins for torrents.
 
     Looks in the cache first. Ideally finds the listings there.
@@ -64,10 +64,14 @@ class Backend:
 
     search_param = search_param.lower()
     results = self.try_cache(search_param)
+    cache_hit = True
 
-    if results:
-      return (results, True)
-    return (self.update_cache(search_param), False)
+    if not results:
+      results = await self.update_cache(search_param)
+      cache_hit = False
+
+    self.sort_by_seeders(results)
+    return (results, cache_hit)
 
   def try_cache(self, search_param: str) -> list:
     """Returns the listings from the cache.
@@ -84,7 +88,7 @@ class Backend:
       return self.cache[search_param]['listings']
     return []
 
-  def update_cache(self, search_param: str) -> list:
+  async def update_cache(self, search_param: str) -> list:
     """Updates the cache.
 
     Searches each plugin and puts its results into the cache.
@@ -100,9 +104,8 @@ class Backend:
       List of torrents matching the search query
 
     """
-    event_loop = asyncio.get_event_loop()
     search_future = self.search_plugins(search_param, except_plugins=[])
-    results = event_loop.run_until_complete(search_future)
+    results = await search_future
 
     if not results:
       return results
@@ -153,6 +156,9 @@ class Backend:
       task = asyncio.create_task(plugin.search(session, search_param))
       tasks.append(task)
     return tasks
+
+  def sort_by_seeders(self, listings: list) -> list:
+    listings.sort(key=lambda x: x.seeders, reverse=True)
 
   def flatten(self, t: list) -> list:
     return [item for sublist in t for item in sublist]

@@ -28,10 +28,9 @@ cd cleanbay
 pip install -r requirements.txt
 ```
 
-3. Run the test
+3. Run the web API
 ```
-python --version # => Python 3.8.1
-python app.py
+uvicorn app:app --reload
 ```
 
 ### How to make plugins

@@ -39,8 +39,8 @@ class CBPlugin(AbstractPlugin):
       torrents.append(Torrent(
           element['name'],
           self.make_magnet(element['info_hash'], element['name']),
-          element['seeders'],
-          element['leechers'],
+          int(element['seeders']),
+          int(element['leechers']),
           element['size'],
           element['username'],
           element['added']
