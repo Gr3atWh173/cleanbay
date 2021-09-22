@@ -1,15 +1,15 @@
 from requests import get as get_sync
 from urllib.parse import quote as uri_quote
-import asyncio
+from datetime import datetime, timezone
+
+import asyncio # pylint: disable=unused-import
+import math
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent
 
 
 class CBPlugin(AbstractPlugin):
-  def verify_cbplugin(self):
-    return True
-
   def info(self):
     return {
         'name': 'piratebay',
@@ -41,24 +41,41 @@ class CBPlugin(AbstractPlugin):
           self.make_magnet(element['info_hash'], element['name']),
           int(element['seeders']),
           int(element['leechers']),
-          element['size'],
+          self.format_size(int(element['size'])),
           element['username'],
-          element['added']
+          self.format_date(int(element['added'])),
       ))
     return torrents
 
   def make_magnet(self, ih, name):
-    return f"magnet:?xt=urn:btih:'{ih}'&dn={uri_quote(name)}{self.trackers()}"
+    return f'magnet:?xt=urn:btih:{ih}&dn={uri_quote(name)}&tr={self.trackers()}'
 
   def trackers(self):
-    tr = '&tr=' + uri_quote('udp://tracker.coppersurfer.tk:6969/announce')
-    tr += '&tr=' + uri_quote('udp://tracker.openbittorrent.com:6969/announce')
-    tr += '&tr=' + uri_quote('udp://9.rarbg.to:2710/announce')
-    tr += '&tr=' + uri_quote('udp://9.rarbg.me:2780/announce')
-    tr += '&tr=' + uri_quote('udp://9.rarbg.to:2730/announce')
-    tr += '&tr=' + uri_quote('udp://tracker.opentrackr.org:1337')
-    tr += '&tr=' + uri_quote('http://p4p.arenabg.com:1337/announce')
-    tr += '&tr=' + uri_quote('udp://tracker.torrent.eu.org:451/announce')
-    tr += '&tr=' + uri_quote('udp://tracker.tiny-vps.com:6969/announce')
-    tr += '&tr=' + uri_quote('udp://open.stealth.si:80/announce')
-    return tr
+    trackers = '&tr='.join(
+      ['udp://tracker.coppersurfer.tk:6969/announce',
+       'udp://tracker.openbittorrent.com:6969/announce',
+       'udp://9.rarbg.to:2710/announce',
+       'udp://9.rarbg.me:2780/announce',
+       'udp://9.rarbg.to:2730/announce',
+       'udp://tracker.opentrackr.org:1337',
+       'http://p4p.arenabg.com:1337/announce',
+       'udp://tracker.torrent.eu.org:451/announce',
+       'udp://tracker.tiny-vps.com:6969/announce',
+       'udp://open.stealth.si:80/announce'])
+    return uri_quote(trackers)
+
+  def format_size(self, size_bytes):
+    if size_bytes == 0:
+      return '0B'
+    size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s = round(size_bytes / p, 2)
+    # return "%s %s" % (s, size_name[i])
+    return f'{s} {size_name[i]}'
+
+  def format_date(self, epoch):
+    return datetime.fromtimestamp(
+      epoch,
+      timezone.utc
+    ).strftime('%Y-%m-%d %H:%M:%S')

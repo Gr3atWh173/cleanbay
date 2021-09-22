@@ -172,7 +172,7 @@ class Backend:
         self.config = json.loads(f.read())
     except EnvironmentError:
       self.config = {
-          'pluginsDirectory': './plugins',
+          'pluginsDirectory': './backend/plugins',
           'cacheSize': 128
       }
 
@@ -181,7 +181,11 @@ class Backend:
     plugins = [import_module(f'backend.plugins.{basename(f)[:-3]}').CBPlugin()
                for f in modules if isfile(f) and not f.endswith('__init__.py')]
 
-    # filter these based on if they have a 'verify_cbplugin' method
+    # filter out the unusable plugins
     for plugin in plugins:
-      if plugin.verify_cbplugin() and plugin.verify_status():
-        self.plugins[plugin.info()['name']] = plugin
+      try:
+        if plugin.verify_status() and 'name' in plugin.info():
+          self.plugins[plugin.info()['name']] = plugin
+      except AttributeError:
+        # TODO(gr3atwh173): add logging
+        pass

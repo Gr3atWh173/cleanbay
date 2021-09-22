@@ -1,15 +1,12 @@
 from bs4 import BeautifulSoup, SoupStrainer
 from requests import get as sync_get
-import asyncio
+import asyncio # pylint: disable=unused-import
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent
 
 
 class CBPlugin(AbstractPlugin):
-  def verify_cbplugin(self):
-    return True
-
   def verify_status(self):
     return sync_get(self.info()['domain']).status_code == 200
 
@@ -37,7 +34,7 @@ class CBPlugin(AbstractPlugin):
         seeders = int(seeders)
 
       torrents.append(Torrent(
-          row.findChildren('td')[1].text.strip().replace('[eztv]', ''),
+          row.findChildren('td')[1].text.strip(),
           row.findChildren('td')[2].findChildren('a')[0]['href'],
           seeders,
           'N/A',

@@ -1,14 +1,11 @@
 from bs4 import BeautifulSoup, SoupStrainer
-import asyncio
+import asyncio # pylint: disable=unused-import
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent
 
 
 class CBPlugin(AbstractPlugin):
-  def verify_cbplugin(self):
-    return True
-
   def verify_status(self):
     return True
 

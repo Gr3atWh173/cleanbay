@@ -1,6 +1,12 @@
 # CleanBay
 A metasearch engine for torrents
 
+Contents
+1. [Current Status](#current-status)
+2. [Setup](#setup)
+3. [API Endpoints](#api-endpoints)
+4. [How to make plugins](#how-to-make-plugins)
+
 ## Current Status
 
 ### Backend
@@ -16,7 +22,7 @@ A metasearch engine for torrents
 ### Frontend
 - [ ] Decide how to approach it
 
-### Setup
+## Setup
 1. Clone this repo
 ```
 git clone https://github.com/gr3atwh173/cleanbay.git
@@ -33,20 +39,20 @@ poetry install
 poetry run uvicorn app:app --reload
 ```
 
-### API endpoints
+## API endpoints
 1. `GET /api/v1/search/{search_query}` returns JSON with the following structure: 
   ```json
   {
       "search_query": "...",
-      "listings_length": 123, // number of results
-      "cache_hit": true, // if the results are from the cache
+      "listings_length": 123,
+      "cache_hit": true,
       "listings": [
         {
           "name": "...",
           "magnet": "...",
           "seeders": 12345,
           "leechers": 1234,
-          "size": "...", // could also be a number
+          "size": "...", 
           "uploader": "...",
           "uploaded_at": "..."
         },
@@ -55,8 +61,17 @@ poetry run uvicorn app:app --reload
   }
   
   ```
-**Note**: This structure would likely be changed in the future.
+2. `GET /api/v1/status` returns JSON with the following structure
+  ```json
+  {
+    "status": "ok", // or "not ok"
+    "plugins": [
+      "loaded",
+      "plugins"
+    ]
+  }
+  ```
 
-### How to make plugins
+## How to make plugins
 
 `backend/abstract_plugin.py` has the interface that plugins must implement. For examples see `backend/plugins/` 

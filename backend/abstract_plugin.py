@@ -7,10 +7,6 @@ import aiohttp
 class AbstractPlugin(ABC):
   """All plugins must be derived from this abstract class."""
 
-  def verify_cbplugin(self) -> bool:
-    """Verifies if this is indeed a valid CBPlugin. Must return `True`."""
-    pass
-
   def verify_status(self) -> bool:
     """Verifies the status of the external service used by the plugin.
 

@@ -1,15 +1,12 @@
 from requests import get as get_sync
 from urllib.parse import quote as uri_quote
-import asyncio
+import asyncio # pylint: disable=unused-import
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent
 
 
 class CBPlugin(AbstractPlugin):
-  def verify_cbplugin(self) -> bool:
-    return True
-
   def verify_status(self) -> bool:
     domain = self.info()['domain']
     return get_sync(domain).status_code == 200
@@ -42,20 +39,21 @@ class CBPlugin(AbstractPlugin):
           int(max_seed_torrent['peers']),
           max_seed_torrent['size'],
           'yts',
-          max_seed_torrent['date_uploaded'].split(' ')[0]
+          max_seed_torrent['date_uploaded']
       ))
     return torrents
 
   def make_magnet(self, name, ih):
-    return f'magnet:?xt=urn:btih:{ih}&dn={uri_quote(name)}{self.trackers()}'
+    return f'magnet:?xt=urn:btih:{ih}&dn={uri_quote(name)}&tr={self.trackers()}'
 
   def trackers(self):
-    tr = uri_quote('udp://open.demonii.com:1337/announce')
-    tr += uri_quote('udp://tracker.openbittorrent.com:80')
-    tr += uri_quote('udp://tracker.coppersurfer.tk:6969')
-    tr += uri_quote('udp://glotorrents.pw:6969/announce')
-    tr += uri_quote('udp://tracker.opentrackr.org:1337/announce')
-    tr += uri_quote('udp://torrent.gresille.org:80/announce')
-    tr += uri_quote('udp://p4p.arenabg.com:1337')
-    tr += uri_quote('udp://tracker.leechers-paradise.org:6969')
-    return tr
+    trackers = '&tr='.join(
+      ['udp://open.demonii.com:1337/announce',
+       'udp://tracker.openbittorrent.com:80',
+       'udp://tracker.coppersurfer.tk:6969',
+       'udp://glotorrents.pw:6969/announce',
+       'udp://tracker.opentrackr.org:1337/announce',
+       'udp://torrent.gresille.org:80/announce',
+       'udp://p4p.arenabg.com:1337',
+       'udp://tracker.leechers-paradise.org:6969'])
+    return uri_quote(trackers)
