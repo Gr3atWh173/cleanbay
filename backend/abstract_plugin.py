@@ -1,12 +1,13 @@
 """The module contains the abstract interface for plugins"""
-from abc import ABC
-import asyncio
+from abc import ABC, abstractmethod
+import asyncio # pylint: disable=unused-import
 import aiohttp
 
 
 class AbstractPlugin(ABC):
   """All plugins must be derived from this abstract class."""
 
+  @abstractmethod
   def verify_status(self) -> bool:
     """Verifies the status of the external service used by the plugin.
 
@@ -16,6 +17,7 @@ class AbstractPlugin(ABC):
     """
     pass
 
+  @abstractmethod
   async def search(
     self,
     session: aiohttp.ClientSession,
@@ -30,6 +32,7 @@ class AbstractPlugin(ABC):
     """
     pass
 
+  @abstractmethod
   def info(self) -> dict:
     """Gives metadata about the plugin
 

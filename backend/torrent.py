@@ -7,13 +7,13 @@ class Torrent():
   """Represents a torrent listing.
 
   Attributes:
-    name (str): name/title of the torrent
-    magnet (str): the URL of the torrent
-    seeders (int|str): seeders of the torrent
-    leechers (int|str): leechers of the torrent
-    size (str): size in no particular unit
-    uploader (str): who uploaded the torrent
-    uploaded_at (str): upload date
+    name (str): Name/title of the torrent
+    magnet (str): Magnet URL of the torrent
+    seeders (int): Number of seeders. -1 if not listed
+    leechers (int): Number of leechers. -1 if not listed
+    size (str): Size in the format "<size> <unit>"
+    uploader (str): Username of the uploader
+    uploaded_at (str): Upload date or time since upload
 
   """
   name: str

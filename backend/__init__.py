@@ -1,4 +1,4 @@
-"""This module is responsible for the management of plugins and the cache."""
+"""Manages the plugins and the cache."""
 import json
 from importlib import import_module
 from os.path import isfile, basename
@@ -16,8 +16,8 @@ class NoPluginsError(Exception):
 class Backend:
   """This class handles all behind-the-scenes logic.
 
-  The main purpose of this class is to handle the loading of the config and
-  the plugins as well as searching each of the plugins asynchronusly.
+  Handle the loading of the config and the plugins as well as searching each of
+  the plugins asynchronusly.
 
   Attributes:
     config (dict): All the configuration information including which directory
@@ -108,7 +108,7 @@ class Backend:
     results = await search_future
 
     if not results:
-      return results
+      return []
 
     if self.config['cacheSize'] <= len(self.cache):
       del self.cache[self.least_frequently_used()]
@@ -117,6 +117,7 @@ class Backend:
         'listings': results,
         'hit_count': 1
     }
+
     return results
 
   async def search_plugins(
@@ -141,6 +142,7 @@ class Backend:
     async with aiohttp.ClientSession() as session:
       tasks = self.create_search_tasks(session, search_param, except_plugins)
       results = await asyncio.gather(*tasks)
+
     return self.flatten(results)
 
   def create_search_tasks(
@@ -151,10 +153,11 @@ class Backend:
     """Creates async tasks for each plugin"""
     tasks = []
     for name, plugin in self.plugins.items():
-      if name in except_plugins:
-        continue
+      if name in except_plugins: continue
+
       task = asyncio.create_task(plugin.search(session, search_param))
       tasks.append(task)
+
     return tasks
 
   def sort_by_seeders(self, listings: list) -> list:
@@ -170,6 +173,7 @@ class Backend:
     try:
       with open('./config.json', 'rt', encoding='utf-8') as f:
         self.config = json.loads(f.read())
+
     except EnvironmentError:
       self.config = {
           'pluginsDirectory': './backend/plugins',
@@ -178,14 +182,16 @@ class Backend:
 
   def load_plugins(self):
     modules = glob.glob(self.config['pluginsDirectory'] + '/*.py')
-    plugins = [import_module(f'backend.plugins.{basename(f)[:-3]}').CBPlugin()
+    plugins = [import_module(f'backend.plugins.{basename(f)[:-3]}')
                for f in modules if isfile(f) and not f.endswith('__init__.py')]
 
     # filter out the unusable plugins
     for plugin in plugins:
+      plugin = plugin.CBPlugin()
       try:
         if plugin.verify_status() and 'name' in plugin.info():
           self.plugins[plugin.info()['name']] = plugin
-      except AttributeError:
+
+      except TypeError:
         # TODO(gr3atwh173): add logging
         pass

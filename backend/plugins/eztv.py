@@ -37,7 +37,7 @@ class CBPlugin(AbstractPlugin):
           row.findChildren('td')[1].text.strip(),
           row.findChildren('td')[2].findChildren('a')[0]['href'],
           seeders,
-          'N/A',
+          -1,
           row.findChildren('td')[3].text,
           'eztv',
           row.findChildren('td')[4].text
