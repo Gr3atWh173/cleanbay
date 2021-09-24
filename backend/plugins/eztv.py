@@ -33,9 +33,14 @@ class CBPlugin(AbstractPlugin):
       else:
         seeders = int(seeders)
 
+      try:
+        magnet = row.findChildren('td')[2].findChildren('a')[0]['href']
+      except IndexError:
+        continue
+      
       torrents.append(Torrent(
           row.findChildren('td')[1].text.strip(),
-          row.findChildren('td')[2].findChildren('a')[0]['href'],
+          magnet,
           seeders,
           -1,
           row.findChildren('td')[3].text,
