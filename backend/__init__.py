@@ -142,7 +142,9 @@ class Backend:
     results = []
     async with aiohttp.ClientSession() as session:
       tasks = self.create_search_tasks(session, search_param, except_plugins)
-      results = await asyncio.gather(*tasks)
+      results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    results = self.exclude_errors(results)
 
     return self.flatten(results)
 
@@ -164,6 +166,9 @@ class Backend:
   def sort_by_seeders(self, listings: list) -> list:
     listings.sort(key=lambda x: x.seeders, reverse=True)
 
+  def exclude_errors(self, listings: list):
+    return [listing for listing in listings if isinstance(listing, list)]
+  
   def flatten(self, t: list) -> list:
     return [item for sublist in t for item in sublist]
 
