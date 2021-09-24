@@ -27,16 +27,17 @@ class Backend:
 
   """
 
-  def __init__(self):
+  def __init__(self, config: dict):
     """Initializes the backend object.
 
-    Loads the config from `config.json` and accordingly loads the plugins.
+    Arguments:
+      config (dict): a dictionary containing the 'pluginsDirectory' and 
+        'cacheSize' keys.
 
     """
-    self.config = {}
+    self.config = config
     self.plugins = {}
     self.cache = {}
-    self.load_config()
     self.load_plugins()
 
   async def search(self, search_param: str) -> Tuple:
@@ -168,17 +169,6 @@ class Backend:
 
   def least_frequently_used(self):
     return min(self.cache.items(), key=lambda x: x['hit_count'])
-
-  def load_config(self):
-    try:
-      with open('./config.json', 'rt', encoding='utf-8') as f:
-        self.config = json.loads(f.read())
-
-    except EnvironmentError:
-      self.config = {
-          'pluginsDirectory': './backend/plugins',
-          'cacheSize': 128
-      }
 
   def load_plugins(self):
     modules = glob.glob(self.config['pluginsDirectory'] + '/*.py')
