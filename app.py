@@ -1,43 +1,53 @@
 """Serves the API that enables searching the backend"""
-from backend import Backend
-from backend.torrent import Category
+import os
 from typing import Optional
 
+from backend import Backend
+from backend.torrent import Category
+
 from fastapi import FastAPI
+from fastapi.requests import Request
+from fastapi.responses import Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 
-import json
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+from dotenv import load_dotenv
 
 
-# load the configuration file
-# TODO(gr3atwh173): pull these values out of the environment instead
-config = {}
-try:
-  with open('./config.json', 'rt', encoding='utf-8') as f:
-    config = json.loads(f.read())
+# prepare the config and rate limits
+load_dotenv()
 
-except EnvironmentError:
-  config = {
-      'pluginsDirectory': './backend/plugins',
-      'cacheSize': 128
-  }
+config = {
+  'pluginsDirectory': os.getenv('PLUGINS_DIRECTORY', './backend/plugins'),
+  'cacheSize': int(os.getenv('CACHE_SIZE', '128'))
+}
+rate_limit = os.getenv('RATE_LIMIT', '100/minute')
+allowed_origin = os.getenv('ALLOWED_ORIGIN', '*')
 
-
+# initialize tha app with limiting and the backend
 app = FastAPI()
+limiter = Limiter(key_func=get_remote_address)
 backend = Backend(config)
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
   CORSMiddleware,
-  allow_origins=['*'],
+  allow_origins=[allowed_origin],
   allow_credentials=True,
   allow_methods=['*'],
   allow_headers=['*']
 )
 
 
+# define routes
 @app.get('/api/v1/status')
-def status():
+@limiter.limit(rate_limit)
+def status(request: Request, response: Response):
   plugins = backend.plugins.keys()
   is_ok = (len(plugins) != 0)
 
@@ -47,9 +57,13 @@ def status():
     'plugins': list(plugins)
   }
 
-
 @app.get('/api/v1/search/{search_query}')
-async def search(search_query: str, category: Optional[int] = None):
+@limiter.limit(rate_limit)
+async def search(
+  request: Request,
+  response: Response,
+  search_query: str,
+  category: Optional[int] = None):
   cat = category if category else Category.ALL.value
   (listings, is_from_cache) = await backend.search(search_query, cat)
 
