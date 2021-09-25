@@ -1,5 +1,22 @@
-"""contains the `Torrent` data class"""
+"""contains the `Torrent` data class and the `Category` enum"""
 from dataclasses import dataclass
+from enum import Enum
+
+
+class Category(Enum):
+  """Represents the category of a plugin.
+
+  Variants:
+    ALL: Everything under the sun
+    GENERAL: Plugins that track everything
+    CINEMA: Plugins that track movies
+    TV: Plugins that track shows on TV, OTT or anything that's not a movie
+
+  """
+  ALL = 0
+  GENERAL = 1
+  CINEMA = 2
+  TV = 3
 
 
 @dataclass

@@ -1,9 +1,13 @@
 """Serves the API that enables searching the backend"""
+from backend import Backend
+from backend.torrent import Category
+from typing import Optional
+
 from fastapi import FastAPI
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
+
 import json
-from backend import Backend
 
 
 # load the configuration file
@@ -45,11 +49,13 @@ def status():
 
 
 @app.get('/api/v1/search/{search_query}')
-async def search(search_query: str):
-  (listings, is_from_cache) = await backend.search(search_query)
-  
+async def search(search_query: str, category: Optional[int] = None):
+  cat = category if category else Category.ALL.value
+  (listings, is_from_cache) = await backend.search(search_query, cat)
+
   return {
     'search_query': search_query,
+    'category': cat,
     'listings_length': len(listings),
     'cache_hit': is_from_cache,
     'listings': jsonable_encoder(listings)

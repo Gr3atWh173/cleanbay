@@ -3,7 +3,7 @@ from requests import get as sync_get
 import asyncio # pylint: disable=unused-import
 
 from ..abstract_plugin import AbstractPlugin
-from ..torrent import Torrent
+from ..torrent import Torrent, Category
 
 
 class CBPlugin(AbstractPlugin):
@@ -52,6 +52,7 @@ class CBPlugin(AbstractPlugin):
   def info(self):
     return {
         'name': 'eztv',
+        'category': Category.TV,
         'domain': 'https://eztv.re',
         'search_url': 'https://eztv.re/search/',
     }

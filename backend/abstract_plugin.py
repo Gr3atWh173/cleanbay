@@ -36,7 +36,7 @@ class AbstractPlugin(ABC):
   def info(self) -> dict:
     """Gives metadata about the plugin
 
-    Must include a 'name' field.
+    Must include 'name' and 'category' keys.
 
     """
     pass

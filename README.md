@@ -10,14 +10,14 @@ Contents
 ## Current Status
 
 ### Backend
-- Implement plugins
+1. Implement plugins
   - [x] 1337x 
   - [x] The Pirate Bay 
   - [x] YTS 
   - [x] EZTV 
   - [ ] More...
-- [x] Implement async 
-- [ ] Add support for categories
+2. [x] Implement async 
+3. [x] Add support for categories
 
 ### Frontend
 - [ ] Decide how to approach it
@@ -40,10 +40,11 @@ poetry run uvicorn app:app --reload
 ```
 
 ## API endpoints
-1. `GET /api/v1/search/{search_query}` returns JSON with the following structure: 
+1. `GET /api/v1/search/{search_query}&category=0` returns JSON with the following structure:
   ```json
   {
       "search_query": "...",
+      "category": 0,
       "listings_length": 123,
       "cache_hit": true,
       "listings": [
@@ -59,8 +60,19 @@ poetry run uvicorn app:app --reload
         ...
       ]
   }
-  
   ```
+---
+**NOTE**
+
+Categories are mapped like so:
+```
+0 => ALL: Everything under the sun
+1 => GENERAL: Plugins that track everything
+2 => CINEMA: Plugins that track movies
+3 => TV: Plugins that track shows on TV, OTT or anything that's not a movie
+```
+---
+
 2. `GET /api/v1/status` returns JSON with the following structure
   ```json
   {

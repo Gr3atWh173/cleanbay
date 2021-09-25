@@ -3,7 +3,7 @@ from urllib.parse import quote as uri_quote
 import asyncio # pylint: disable=unused-import
 
 from ..abstract_plugin import AbstractPlugin
-from ..torrent import Torrent
+from ..torrent import Torrent, Category
 
 
 class CBPlugin(AbstractPlugin):
@@ -14,6 +14,7 @@ class CBPlugin(AbstractPlugin):
   def info(self) -> dict:
     return {
         'name': 'yts',
+        'category': Category.CINEMA,
         'api_url': 'https://yts.mx/api/v2/list_movies.json?query_term=',
         'domain': 'https://yts.mx'
     }
@@ -30,8 +31,8 @@ class CBPlugin(AbstractPlugin):
     for element in resp['data']['movies']:
       max_seed_torrent = max(
           element['torrents'],
-          key=lambda x: x['seeds']
-      )
+          key=lambda x: x['seeds'])
+
       torrents.append(Torrent(
           element['title'],
           self.make_magnet(element['title'], max_seed_torrent['hash']),
@@ -39,8 +40,8 @@ class CBPlugin(AbstractPlugin):
           int(max_seed_torrent['peers']),
           max_seed_torrent['size'],
           'yts',
-          max_seed_torrent['date_uploaded']
-      ))
+          max_seed_torrent['date_uploaded']))
+    
     return torrents
 
   def make_magnet(self, name, ih):

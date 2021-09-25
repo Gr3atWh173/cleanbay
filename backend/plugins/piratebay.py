@@ -6,13 +6,14 @@ import asyncio # pylint: disable=unused-import
 import math
 
 from ..abstract_plugin import AbstractPlugin
-from ..torrent import Torrent
+from ..torrent import Torrent, Category
 
 
 class CBPlugin(AbstractPlugin):
   def info(self):
     return {
         'name': 'piratebay',
+        'category': Category.GENERAL,
         'domain': 'https://apibay.org',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
     }
