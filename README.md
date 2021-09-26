@@ -1,26 +1,16 @@
-# CleanBay
+# Cleanbay
 A metasearch engine for torrents
 
-Contents
-1. [Current Status](#current-status)
+1. [Live instances](#live-instances)
 2. [Setup](#setup)
 3. [API Endpoints](#api-endpoints)
-4. [How to make plugins](#how-to-make-plugins)
+4. [Contributing](#contributing)
 
-## Current Status
+## Live instances
 
-### Backend
-1. Implement plugins
-  - [x] 1337x 
-  - [x] The Pirate Bay 
-  - [x] YTS 
-  - [x] EZTV 
-  - [ ] More...
-2. [x] Implement async 
-3. [x] Add support for categories
-
-### Frontend
-- [ ] Decide how to approach it
+You can find a running instance at:
+1. https://testbay.herokuapp.com or,
+2. https://cleanbay.netlify.app if you prefer a frontend
 
 ## Setup
 1. Clone this repo
@@ -34,13 +24,32 @@ cd cleanbay
 poetry install
 ```
 
+*Optional*: Create a `.env` file with the following parameters in the project
+root:
+```
+# directory where the plugins are located
+# must have a __init__.py file
+PLUGINS_DIRECTORY="./backend/plugins"
+
+# rate limiting by IP
+RATE_LIMIT="100/minute"
+
+# cache size in 'entries'
+CACHE_SIZE=128
+
+# domain allowed to make cross-origin requests to the server
+# '*' allows for any domain to request data
+ALLOWED_ORIGIN="*"
+```
+
 3. Run the web API
 ```
-poetry run uvicorn app:app --reload
+poetry run uvicorn app:app
 ```
 
 ## API endpoints
-1. `GET /api/v1/search/{search_query}&category=0` returns JSON with the following structure:
+1. `GET /api/v1/search/{search_query}&category=0` returns JSON with the 
+following structure:
   ```json
   {
       "search_query": "...",
@@ -84,6 +93,25 @@ Categories are mapped like so:
   }
   ```
 
-## How to make plugins
+## Contributing
 
-`backend/abstract_plugin.py` has the interface that plugins must implement. For examples see `backend/plugins/` 
+### How you can contribute
+This is a non-exhaustive list:
+1. Make a plugin (or two, or three, or four...)
+2. Add new features to the backend, or make existing ones better!
+3. Make a better frontend.
+4. Write better documentation for the API.
+5. Bug fixes, refactors, etc.
+6. Suggest a feature.
+
+In any case, thanks for contributing!
+
+### How to contribute
+Before making a change, please first discuss the change you want to make via raising an issue.
+
+1. Fork and clone the repo
+2. Run `poetry install` to install tha dependencies
+3. Create a branch for your PR with `git checkout -b your-branch-name`
+4. Code your changes.
+5. Push the changes to your fork
+6. Make a pull request!
