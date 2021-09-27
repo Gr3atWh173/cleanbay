@@ -33,19 +33,29 @@ class CBPlugin(AbstractPlugin):
           element['torrents'],
           key=lambda x: x['seeds'])
 
+      title_long = element['title_long']
+      slug = element['slug']
+      quality = max_seed_torrent['quality']
+      type_ = max_seed_torrent['type']
+      info_hash = max_seed_torrent['hash']
+      seeders = max_seed_torrent['seeds']
+      leechers = max_seed_torrent['peers']
+      size = max_seed_torrent['size']
+      date_uploaded = max_seed_torrent['date_uploaded']
+
       torrents.append(Torrent(
-          element['title'],
-          self.make_magnet(element['title'], max_seed_torrent['hash']),
-          int(max_seed_torrent['seeds']),
-          int(max_seed_torrent['peers']),
-          max_seed_torrent['size'],
+          f'{title_long} [{quality}] [{type_}]',
+          self.make_magnet(slug, info_hash),
+          int(seeders),
+          int(leechers),
+          size,
           'yts',
-          max_seed_torrent['date_uploaded']))
-    
+          date_uploaded))
+
     return torrents
 
-  def make_magnet(self, name, ih):
-    return f'magnet:?xt=urn:btih:{ih}&dn={uri_quote(name)}&tr={self.trackers()}'
+  def make_magnet(self, slug, ih):
+    return f'magnet:?xt=urn:btih:{ih}&dn={slug}&tr={self.trackers()}'
 
   def trackers(self):
     trackers = '&tr='.join(
