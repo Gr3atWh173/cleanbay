@@ -11,7 +11,8 @@ class Category(Enum):
     GENERAL: Plugins that track everything
     CINEMA: Plugins that track movies
     TV: Plugins that track shows on TV, OTT or anything that's not a movie
-
+    SOFTWARE: Plugins that track software excluding games
+    
   """
   ALL = 0
   GENERAL = 1

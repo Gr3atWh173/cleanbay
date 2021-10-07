@@ -1,10 +1,18 @@
 # Cleanbay
 A metasearch engine for torrents
 
+0. [Supported trackers](#supported-trackers)
 1. [Live instances](#live-instances)
 2. [Setup](#setup)
 3. [API Endpoints](#api-endpoints)
 4. [Contributing](#contributing)
+
+## Supported trackers
+Currently supported trackers are:
+1. Piratebay
+2. YTS
+3. EZTV
+4. LinuxTracker
 
 ## Live instances
 
@@ -79,6 +87,7 @@ Categories are mapped like so:
 1 => GENERAL: Plugins that track everything
 2 => CINEMA: Plugins that track movies
 3 => TV: Plugins that track shows on TV, OTT or anything that's not a movie
+4 => SOFTWARE: Plugins that track software excluding games
 ```
 ---
 
