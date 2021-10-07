@@ -6,6 +6,8 @@ from os.path import isfile, basename
 from typing import Tuple
 import glob
 
+from difflib import SequenceMatcher
+
 import asyncio
 import aiohttp
 
@@ -77,7 +79,7 @@ class Backend:
       results = await self.update_cache(search_param, category)
       cache_hit = False
 
-    self.sort_by_seeders(results)
+    self.sort_by_relevance_and_seeders(results, search_param)
     return (results, cache_hit)
 
   def try_cache(self, search_param: str, category: Category) -> list:
@@ -158,7 +160,9 @@ class Backend:
     """
     results = []
     plugins = self.get_plugins_by_category(category, except_plugins)
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(
+      connector=aiohttp.TCPConnector(ssl=False)
+    ) as session:
       tasks = self.create_search_tasks(session, search_param, plugins)
       results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -191,9 +195,16 @@ class Backend:
     return [plugin for _, plugin in self.plugins.items()
             if plugin.info()['category'].value == category
             and plugin.info()['name'] not in except_plugins]
-
-  def sort_by_seeders(self, listings: list) -> list:
-    listings.sort(key=lambda x: x.seeders, reverse=True)
+    
+  def sort_by_relevance_and_seeders(
+    self,
+    listings: list,
+    search_param: str) -> list:
+    listings.sort(
+      key=lambda z: (
+          z.seeders,
+          SequenceMatcher(None, z.name, search_param).ratio()),
+      reverse=True)
 
   def exclude_errors(self, listings: list):
     return [listing for listing in listings if isinstance(listing, list)]
@@ -218,4 +229,8 @@ class Backend:
 
       except TypeError:
         # TODO(gr3atwh173): add logging
+        pass
+
+      except: # pylint: disable=bare-except
+        # Something probably went wrong in 'verify_status()'
         pass

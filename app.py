@@ -28,7 +28,7 @@ config = {
 rate_limit = os.getenv('RATE_LIMIT', '100/minute')
 allowed_origin = os.getenv('ALLOWED_ORIGIN', '*')
 
-# initialize tha app with limiting and the backend
+# initialize tha app (with limiting and cors) and the backend
 app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
 backend = Backend(config)
@@ -47,7 +47,10 @@ app.add_middleware(
 # define routes
 @app.get('/api/v1/status')
 @limiter.limit(rate_limit)
-def status(request: Request, response: Response):
+def status(
+  request: Request,
+  response: Response):
+  """returns the current status and list of available plugins"""
   plugins = backend.plugins.keys()
   is_ok = (len(plugins) != 0)
 
@@ -64,6 +67,7 @@ async def search(
   response: Response,
   search_query: str,
   category: Optional[int] = None):
+  """performs the search on all available plugins"""
   cat = category if category else Category.ALL.value
   (listings, is_from_cache) = await backend.search(search_query, cat)
 
