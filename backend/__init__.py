@@ -17,6 +17,11 @@ class NoPluginsError(Exception):
   pass
 
 
+class InvalidSearchError(Exception):
+  """Indicates that the search parameters were invalid."""
+  pass
+
+
 class Backend:
   """This class handles all behind-the-scenes logic.
 
@@ -46,8 +51,12 @@ class Backend:
 
   async def search(
     self,
-    search_param: str,
-    category: Category = Category.ALL) -> Tuple:
+    search_term: str,
+    include_categories: list,
+    exclude_categories: list,
+    include_sites: list,
+    exclude_sites: list
+  ) -> Tuple:
     """Searches the loaded plugins for torrents.
 
     Looks in the cache first. Ideally finds the listings there.
@@ -71,18 +80,25 @@ class Backend:
     if not self.plugins:
       raise NoPluginsError('No plugins loaded.')
 
-    search_param = search_param.lower()
-    results = self.try_cache(search_param, category)
-    cache_hit = True
+    search_term = search_term.lower()
+    plugins = self.get_plugins(
+      include_categories,
+      exclude_categories,
+      include_sites,
+      exclude_sites
+    )
 
-    if not results:
-      results = await self.update_cache(search_param, category)
-      cache_hit = False
+    if not plugins:
+      raise InvalidSearchError
 
-    self.sort_by_relevance_and_seeders(results, search_param)
+    results, cache_hit = self.try_cache(search_term, plugins)
+
+    if not cache_hit:
+      results = await self.update_cache(search_term, plugins)
+
     return (results, cache_hit)
 
-  def try_cache(self, search_param: str, category: Category) -> list:
+  def try_cache(self, search_param: str, plugins: list) -> Tuple:
     """Returns the listings from the cache.
 
     Args:
@@ -90,18 +106,19 @@ class Backend:
       category (Category): Category of plugins to search.
 
     Returns:
-      A list of torrents in case of a cache hit, an empty list otherwise.
+      A tuple containing a list of torrents and a bool denoting if there was a 
+      cache hit or not.
 
     """
-    key_tuple = (search_param, category)
+    key_tuple = (search_param, frozenset(plugins))
 
     if key_tuple in self.cache:
       self.cache[key_tuple]['hit_count'] += 1
-      return self.cache[key_tuple]['listings']
+      return (self.cache[key_tuple]['listings'], True)
 
-    return []
+    return ([], False)
 
-  async def update_cache(self, search_param: str, category: Category) -> list:
+  async def update_cache(self, search_param: str, plugins: list) -> list:
     """Updates the cache.
 
     Searches each plugin in the category and puts its results into the cache.
@@ -118,11 +135,7 @@ class Backend:
       List of torrents matching the search query
 
     """
-    search_future = self.search_plugins(
-      search_param,
-      category=category,
-      except_plugins=[])
-
+    search_future = self.search_plugins(search_param, plugins)
     results = await search_future
 
     if not results:
@@ -131,18 +144,15 @@ class Backend:
     if self.config['cacheSize'] <= len(self.cache):
       del self.cache[self.least_frequently_used()]
 
-    self.cache[(search_param, category)] = {
+    key_tuple = (search_param, frozenset(plugins))
+    self.cache[key_tuple] = {
         'listings': results,
         'hit_count': 1
     }
 
     return results
 
-  async def search_plugins(
-          self,
-          search_param: str,
-          category: Category,
-          except_plugins: list) -> list:
+  async def search_plugins(self, search_param: str, plugins: list) -> list:
     """Searches the plugins etxcept the ones passed in `except_plugins`
 
     This is an asynchronus function which fires off the plugins, which, in turn,
@@ -159,7 +169,7 @@ class Backend:
 
     """
     results = []
-    plugins = self.get_plugins_by_category(category, except_plugins)
+    
     async with aiohttp.ClientSession(
       connector=aiohttp.TCPConnector(ssl=False)
     ) as session:
@@ -184,17 +194,29 @@ class Backend:
 
     return tasks
 
-  def get_plugins_by_category(
+  def get_plugins(
     self,
-    category: Category,
-    except_plugins: list) -> list:
-    """Returns a list of all plugins in a specific category"""
-    if category == Category.ALL.value:
-      return [plugin for _, plugin in self.plugins.items()]
+    include_categories: list,
+    exclude_categories: list,
+    include_sites: list,
+    exclude_sites: list
+  ) -> list:
+    # TODO(gr3atwh173): this needs a better implementation
+    plugins = set()
 
-    return [plugin for _, plugin in self.plugins.items()
-            if plugin.info()['category'].value == category
-            and plugin.info()['name'] not in except_plugins]
+    # categories
+    for plugin in self.plugins.values():
+      plugin_cat = plugin.info()['category']
+      if plugin_cat in include_categories and plugin_cat not in exclude_categories:
+        plugins.add(plugin)
+    
+    # sites
+    for plugin in self.plugins.values():
+      plugin_site = plugin.info()['domain']
+      if plugin_site in include_sites and plugin_site not in exclude_sites:
+        plugins.add(plugin)
+    
+    return list(plugins)
     
   def sort_by_relevance_and_seeders(
     self,
