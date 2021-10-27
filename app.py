@@ -1,6 +1,7 @@
 """Serves the API that enables searching the backend"""
 import os
 from typing import Tuple
+from itertools import chain
 
 from backend import Backend
 
@@ -91,9 +92,13 @@ def status(request: Request, response: Response):
 @limiter.limit(rate_limit)
 async def search(request: Request, response: Response, sq: SearchQuery):
   """performs the search on all available plugins"""
-  sq_is_valid, msg = validate_search_query(sq)
-  if not sq_is_valid:
-    return make_error(msg)
+  if len(backend.plugins) == 0:
+    response.status_code = 500
+    return make_error("No searchable plugins.")
+
+  if not is_valid(sq):
+    response.status_code = 400
+    return make_error("Invalid search query.")
 
   s_term, i_cats, e_cats, i_sites, e_sites = parse_search_query(sq)
 
@@ -106,13 +111,7 @@ async def search(request: Request, response: Response, sq: SearchQuery):
   )
 
   return make_search_response(s_term, listings, cache_hit)
-  # return {
-  #   's_term': s_term,
-  #   'i_cats': i_cats,
-  #   'e_cats': e_cats,
-  #   'i_sites': i_sites,
-  #   'e_sites': e_sites
-  # }
+
 
 def make_search_response(
   search_term: str,
@@ -131,8 +130,25 @@ def make_error(msg: str) -> dict:
   return {'status': 'error', 'msg': msg}
 
 
-def validate_search_query(sq: SearchQuery) -> Tuple:
-  return (True, '')
+def is_valid(sq: SearchQuery) -> bool:
+  # we should atleast have a search_term
+  if sq.search_term.strip() == '':
+    return False
+
+  # should only use inclusion or exclusion per filter
+  if sq.included_categories and sq.excluded_categories or sq.included_sites and sq.excluded_sites:
+    return False
+
+  # filters should have valid values
+  for cat in chain(sq.included_categories, sq.excluded_categories):
+    if cat < 1 or cat > len(CATEGORY_MAP) - 1:
+      return False
+
+  for site in chain(sq.include_sites, sq.excluded_sites):
+    if site not in backend.plugins.keys():
+      return False
+
+  return True
 
 
 def parse_search_query(search_query: SearchQuery) -> Tuple:
@@ -142,4 +158,3 @@ def parse_search_query(search_query: SearchQuery) -> Tuple:
   i_sites = search_query.included_sites
   e_sites = search_query.excluded_sites
   return (s_term, i_cats, e_cats, i_sites, e_sites)
-

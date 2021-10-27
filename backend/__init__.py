@@ -5,8 +5,7 @@ from importlib import import_module
 from os.path import isfile, basename
 from typing import Tuple
 import glob
-
-from difflib import SequenceMatcher
+from urllib.parse import urlparse
 
 import asyncio
 import aiohttp
@@ -78,21 +77,17 @@ class Backend:
 
     """
     if not self.plugins:
-      raise NoPluginsError('No plugins loaded.')
+      raise NoPluginsError()
 
     search_term = search_term.lower()
-    plugins = self.get_plugins(
-      include_categories,
-      exclude_categories,
-      include_sites,
-      exclude_sites
+    plugins = self.filter_plugins(
+      include_categories, exclude_categories,
+      include_sites, exclude_sites
     )
 
-    if not plugins:
-      raise InvalidSearchError
+    print(plugins)
 
     results, cache_hit = self.try_cache(search_term, plugins)
-
     if not cache_hit:
       results = await self.update_cache(search_term, plugins)
 
@@ -194,30 +189,50 @@ class Backend:
 
     return tasks
 
-  def get_plugins(
+  def filter_plugins(
     self,
     include_categories: list,
     exclude_categories: list,
     include_sites: list,
     exclude_sites: list
   ) -> list:
-    # TODO(gr3atwh173): this needs a better implementation
-    plugins = set()
+    # probably should not be using include and exclude together
+    if include_categories and exclude_categories or include_sites and exclude_sites:
+      raise InvalidSearchError()
+
+    plugins = set(self.plugins.values())
 
     # categories
-    for plugin in self.plugins.values():
-      plugin_cat = plugin.info()['category']
-      if plugin_cat in include_categories and plugin_cat not in exclude_categories:
-        plugins.add(plugin)
-    
+    if include_categories:
+      plugins = set()
+      for plugin in self.plugins.values():
+        cat = plugin.info()['category']
+        if cat in include_categories:
+          plugins.add(plugin)
+
+    elif exclude_categories:
+      for plugin in self.plugins.values():
+        cat = plugin.info()['category']
+        if cat in exclude_categories:
+          plugins.remove(plugin)
+
     # sites
-    for plugin in self.plugins.values():
-      plugin_site = plugin.info()['domain']
-      if plugin_site in include_sites and plugin_site not in exclude_sites:
-        plugins.add(plugin)
-    
+    if include_sites:
+      plugins = set()
+      for site, plugin in self.plugins.items():
+        if site in include_sites:
+          plugins.add(plugin)
+
+    elif exclude_sites:
+      for site, plugin in self.plugins.items():
+        if site in exclude_sites:
+          plugins.remove(plugin)
+
+    if not plugins:
+      raise InvalidSearchError()
+
     return list(plugins)
-    
+
   def sort_by_relevance_and_seeders(
     self,
     listings: list,
