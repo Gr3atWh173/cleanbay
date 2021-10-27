@@ -66,7 +66,6 @@ class SearchQuery(BaseModel):
 
 
 CATEGORY_MAP = {
-  'all': Category.ALL,
   'general': Category.GENERAL,
   'cinema': Category.CINEMA,
   'tv': Category.TV,
@@ -141,7 +140,7 @@ def is_valid(sq: SearchQuery) -> bool:
 
   # filters should have valid values
   for cat in chain(sq.included_categories, sq.excluded_categories):
-    if cat < 1 or cat > len(CATEGORY_MAP) - 1:
+    if cat not in CATEGORY_MAP.keys():
       return False
 
   for site in chain(sq.include_sites, sq.excluded_sites):
