@@ -56,15 +56,23 @@ poetry run uvicorn app:app
 ```
 
 ## API endpoints
-1. `GET /api/v1/search/{search_query}&category=0` returns JSON with the 
-following structure:
+1. `POST /api/v1/search/` expects
   ```json
   {
-      "search_query": "...",
-      "category": 0,
-      "listings_length": 123,
+    "search_term": "...",
+    "include_categories": ["cinema", "tv"],
+    "exclude_categories": [],
+    "include_sites":["linuxtracker", "piratebay"],
+    "exclude_sites":[]
+  }
+  ```
+  and returns JSON with the following structure:
+  ```json
+  {
+      "search_term": "...",
+      "length": 123,
       "cache_hit": true,
-      "listings": [
+      "data": [
         {
           "name": "...",
           "magnet": "...",
@@ -83,11 +91,11 @@ following structure:
 
 Categories are mapped like so:
 ```
-0 => ALL: Everything under the sun
-1 => GENERAL: Plugins that track everything
-2 => CINEMA: Plugins that track movies
-3 => TV: Plugins that track shows on TV, OTT or anything that's not a movie
-4 => SOFTWARE: Plugins that track software excluding games
+"all" or "*" => ALL: Everything under the sun
+"general"    => GENERAL: Plugins that track everything
+"cinema"     => CINEMA: Plugins that track movies
+"tv"         => TV: Plugins that track shows on TV, OTT or anything that's not a movie
+"software"   => SOFTWARE: Plugins that track software excluding games
 ```
 ---
 
