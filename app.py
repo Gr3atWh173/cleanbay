@@ -4,11 +4,11 @@ from typing import Tuple
 from itertools import chain
 
 from backend import Backend
+from backend.torrent import Category
 
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import Response
-# from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -19,7 +19,6 @@ from pydantic import BaseModel
 
 from dotenv import load_dotenv
 
-from backend.torrent import Category
 
 
 # load the config data
@@ -52,20 +51,21 @@ class SearchQuery(BaseModel):
 
   Attributes:
     search_term (str): The string to search for
-    included_categories (list): Categories in which to search
-    excluded_categories (list): Categories in which to not search
-    included_sites (list): Plugins/services to search
-    excluded_sites (list): Plugins/services to not search
+    include_categories (list): Categories in which to search
+    exclude_categories (list): Categories in which to not search
+    include_sites (list): Plugins/services to search
+    exclude_sites (list): Plugins/services to not search
 
   """
   search_term: str
-  included_categories: list
-  excluded_categories: list
-  included_sites: list
-  excluded_sites: list
+  include_categories: list
+  exclude_categories: list
+  include_sites: list
+  exclude_sites: list
 
 
 CATEGORY_MAP = {
+  'all': Category.ALL,
   'general': Category.GENERAL,
   'cinema': Category.CINEMA,
   'tv': Category.TV,
@@ -77,7 +77,7 @@ CATEGORY_MAP = {
 @app.get('/api/v1/status')
 @limiter.limit(rate_limit)
 def status(request: Request, response: Response):
-  """returns the current status and list of available plugins"""
+  """Returns the current status and list of available plugins"""
   plugins = backend.plugins.keys()
   status_word = 'ok' if len(plugins) != 0 else 'not ok'
 
@@ -90,14 +90,14 @@ def status(request: Request, response: Response):
 @app.post('/api/v1/search')
 @limiter.limit(rate_limit)
 async def search(request: Request, response: Response, sq: SearchQuery):
-  """performs the search on all available plugins"""
+  """Searches the relevant plugins for torrents"""
   if len(backend.plugins) == 0:
     response.status_code = 500
-    return make_error("No searchable plugins.")
+    return make_error('No searchable plugins.')
 
   if not is_valid(sq):
     response.status_code = 400
-    return make_error("Invalid search query.")
+    return make_error('Invalid search query.')
 
   s_term, i_cats, e_cats, i_sites, e_sites = parse_search_query(sq)
 
@@ -135,25 +135,42 @@ def is_valid(sq: SearchQuery) -> bool:
     return False
 
   # should only use inclusion or exclusion per filter
-  if sq.included_categories and sq.excluded_categories or sq.included_sites and sq.excluded_sites:
+  if sq.include_categories and sq.exclude_categories:
+    return False
+  if sq.include_sites and sq.exclude_sites:
     return False
 
-  # filters should have valid values
-  for cat in chain(sq.included_categories, sq.excluded_categories):
+  # each filter should have valid values
+  for cat in chain(sq.include_categories, sq.exclude_categories):
     if cat not in CATEGORY_MAP.keys():
       return False
 
-  for site in chain(sq.include_sites, sq.excluded_sites):
+  for site in chain(sq.include_sites, sq.exclude_sites):
     if site not in backend.plugins.keys():
       return False
 
   return True
 
 
-def parse_search_query(search_query: SearchQuery) -> Tuple:
-  s_term = search_query.search_term
-  i_cats = [CATEGORY_MAP[cat] for cat in search_query.included_categories]
-  e_cats = [CATEGORY_MAP[cat] for cat in search_query.excluded_categories]
-  i_sites = search_query.included_sites
-  e_sites = search_query.excluded_sites
+def parse_search_query(sq: SearchQuery) -> Tuple:
+  s_term = sq.search_term
+
+  # if there's 'all' in the include category list, treat it as if the list was
+  # empty, ie, include everything
+  i_cats = []
+  if any(x in sq.include_categories for x in ['all', '*']):
+    i_cats = CATEGORY_MAP.values()
+    i_cats.remove(Category.ALL)
+  else:
+    i_cats = [CATEGORY_MAP[cat] for cat in sq.include_categories]
+
+  e_cats = [CATEGORY_MAP[cat] for cat in sq.exclude_categories]
+
+  i_sites = sq.include_sites
+  e_sites = sq.exclude_sites
+
   return (s_term, i_cats, e_cats, i_sites, e_sites)
+
+if __name__ == '__main__':
+  import uvicorn
+  uvicorn.run(app, debug=True)
