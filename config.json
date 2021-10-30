@@ -1,4 +1,4 @@
 {
-	"pluginsDirectory": "./backend/plugins",
+	"pluginsDirectory": "./cleanbay/plugins",
 	"cacheSize": 128
 }

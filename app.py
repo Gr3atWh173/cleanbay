@@ -3,8 +3,9 @@ import os
 from typing import Tuple
 from itertools import chain
 
-from backend import Backend
-from backend.torrent import Category
+from cleanbay.backend import Backend, InvalidSearchError
+from cleanbay.torrent import Category
+from cleanbay.plugins_manager import NoPluginsError
 
 from fastapi import FastAPI
 from fastapi.requests import Request
@@ -20,11 +21,10 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 
-
 # load the config data
 load_dotenv()
 config = {
-  'pluginsDirectory': os.getenv('PLUGINS_DIRECTORY', './backend/plugins'),
+  'pluginsDirectory': os.getenv('PLUGINS_DIRECTORY', './cleanbay/plugins'),
   'cacheSize': int(os.getenv('CACHE_SIZE', '128'))
 }
 rate_limit = os.getenv('RATE_LIMIT', '100/minute')
@@ -78,8 +78,8 @@ CATEGORY_MAP = {
 @limiter.limit(rate_limit)
 def status(request: Request, response: Response):
   """Returns the current status and list of available plugins"""
-  plugins = backend.plugins.keys()
-  status_word = 'ok' if len(plugins) != 0 else 'not ok'
+  plugins, is_ok = backend.state()
+  status_word = 'ok' if is_ok else 'not ok'
 
   return {
     'status': status_word,
@@ -91,23 +91,26 @@ def status(request: Request, response: Response):
 @limiter.limit(rate_limit)
 async def search(request: Request, response: Response, sq: SearchQuery):
   """Searches the relevant plugins for torrents"""
-  if len(backend.plugins) == 0:
-    response.status_code = 500
-    return make_error('No searchable plugins.')
-
   if not is_valid(sq):
     response.status_code = 400
     return make_error('Invalid search query.')
 
   s_term, i_cats, e_cats, i_sites, e_sites = parse_search_query(sq)
 
-  listings, cache_hit = await backend.search(
-    search_term=s_term,
-    include_categories=i_cats,
-    exclude_categories=e_cats,
-    include_sites=i_sites,
-    exclude_sites=e_sites
-  )
+  try:
+    listings, cache_hit = await backend.search(
+      search_term=s_term,
+      include_categories=i_cats,
+      exclude_categories=e_cats,
+      include_sites=i_sites,
+      exclude_sites=e_sites
+    )
+  except NoPluginsError:
+    response.status_code = 500
+    return make_error("No searchable plugins.")
+  except InvalidSearchError:
+    response.status_code = 400
+    return make_error("Invalid search.")
 
   return make_search_response(s_term, listings, cache_hit)
 
@@ -145,8 +148,9 @@ def is_valid(sq: SearchQuery) -> bool:
     if cat not in CATEGORY_MAP.keys():
       return False
 
+  indexed_sites = backend.state()[0]
   for site in chain(sq.include_sites, sq.exclude_sites):
-    if site not in backend.plugins.keys():
+    if site not in indexed_sites:
       return False
 
   return True

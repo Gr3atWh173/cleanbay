@@ -1,19 +1,12 @@
 """Manages the plugins and the cache."""
-from backend.torrent import Category
-
-from importlib import import_module
-from os.path import isfile, basename
-from typing import Tuple
-import glob
 from urllib.parse import urlparse
 
 import asyncio
 import aiohttp
 
+from typing import Tuple
 
-class NoPluginsError(Exception):
-  """Indicates that no usable plugins could be loaded."""
-  pass
+from .plugins_manager import PluginsManager
 
 
 class InvalidSearchError(Exception):
@@ -29,7 +22,7 @@ class Backend:
 
   Attributes:
     config (dict): All the configuration information including which directory
-      the plugins are in and what the cache size should be.
+    the plugins are in and what the cache size should be.
     plugins (dict): All the usable plugins hashed with their name.
     cache (dict): A simplistic lFU cache implementation.
 
@@ -39,15 +32,14 @@ class Backend:
     """Initializes the backend object.
 
     Arguments:
-      config (dict): a dictionary containing the 'pluginsDirectory' and
-        'cacheSize' keys.
+      config (dict): a dictionary containing the 'pluginsDirectory' and 
+      'cacheSize' keys.
 
     """
     self.config = config
-    self.plugins = {}
     self.cache = {} # TODO(gr3atwh173): make cache its own module
-    self.load_plugins()
-
+    self.plugins_manager = PluginsManager(config['pluginsDirectory'])
+    
   async def search(
     self,
     search_term: str,
@@ -81,14 +73,18 @@ class Backend:
       False otherwise.
 
     Raises:
-      NoPluginsError: If there are no loaded plugins.
+      InvalidSearchError: if both include and exclude variants of a filter are
+      used together or if no plugins are left after filtering.
 
     """
-    if not self.plugins:
-      raise NoPluginsError()
-
+    # should not be using include and exclude together
+    if include_categories and exclude_categories \
+      or include_sites and exclude_sites:
+      raise InvalidSearchError()
+    
     search_term = search_term.lower()
-    plugins = self.filter_plugins(
+
+    plugins = self.plugins_manager.filter_plugins(
       include_categories, exclude_categories,
       include_sites, exclude_sites
     )
@@ -98,71 +94,6 @@ class Backend:
       results = await self.update_cache(search_term, plugins)
 
     return (results, cache_hit)
-
-  def filter_plugins(
-    self,
-    include_categories: list,
-    exclude_categories: list,
-    include_sites: list,
-    exclude_sites: list
-  ) -> list:
-    """Filters the plugins based on the passed arguments.
-
-    Individual plugins are given more preference than categories. If a plugin
-    was excluded in the category filtering phase, it may be added back if it
-    was passed in the `include_sites` list.
-
-    Args:
-      include_categories (list): Categories of plugins to search
-      exclude_categories (list): Categories of plugins to not search
-      include_sites (list): Names of services to search
-      exclude_sites (list): Names of services to not search
-
-    Returns:
-      A list of filtered plugin objects.
-
-    Raises:
-      InvalidSearchError: if both include and exclude variants of a filter are
-      used together or if no plugins are left after filtering.
-
-    """
-    # probably should not be using include and exclude together
-    if include_categories and exclude_categories \
-      or include_sites and exclude_sites:
-      raise InvalidSearchError()
-
-    filtered_plugins = set(self.plugins.values())
-
-    # categories
-    if include_categories:
-      filtered_plugins = set()
-      for plugin in self.plugins.values():
-        cat = plugin.info()['category']
-        if cat in include_categories:
-          filtered_plugins.add(plugin)
-
-    elif exclude_categories:
-      for plugin in self.plugins.values():
-        cat = plugin.info()['category']
-        if cat in exclude_categories:
-          filtered_plugins.remove(plugin)
-
-    # sites
-    if include_sites:
-      filtered_plugins = set()
-      for site, plugin in self.plugins.items():
-        if site in include_sites:
-          filtered_plugins.add(plugin)
-
-    elif exclude_sites:
-      for site, plugin in self.plugins.items():
-        if site in exclude_sites and plugin in filtered_plugins:
-          filtered_plugins.remove(plugin)
-
-    if not filtered_plugins:
-      raise InvalidSearchError()
-
-    return list(filtered_plugins)
 
   def try_cache(self, search_param: str, plugins: list) -> Tuple:
     """Returns the listings from the cache.
@@ -246,10 +177,11 @@ class Backend:
     return self.flatten(results)
 
   def create_search_tasks(
-          self,
-          session: aiohttp.ClientSession,
-          search_param: str,
-          plugins: list) -> list:
+    self,
+    session: aiohttp.ClientSession,
+    search_param: str,
+    plugins: list
+  ) -> list:
     """Creates async tasks for each plugin"""
     tasks = []
     for plugin in plugins:
@@ -258,6 +190,12 @@ class Backend:
       tasks.append(task)
 
     return tasks
+  
+  def state(self):
+    plugins = self.plugins_manager.plugins.keys()
+    is_ok = True if plugins else False
+
+    return (plugins, is_ok)
 
   def exclude_errors(self, listings: list):
     return [listing for listing in listings if isinstance(listing, list)]
@@ -267,23 +205,3 @@ class Backend:
 
   def least_frequently_used(self):
     return min(self.cache.items(), key=lambda x: x['hit_count'])
-
-  def load_plugins(self):
-    modules = glob.glob(self.config['pluginsDirectory'] + '/*.py')
-    plugins = [import_module(f'backend.plugins.{basename(f)[:-3]}')
-               for f in modules if isfile(f) and not f.endswith('__init__.py')]
-
-    # filter out the unusable plugins
-    for plugin in plugins:
-      plugin = plugin.CBPlugin()
-      try:
-        if plugin.verify_status() and 'name' in plugin.info():
-          self.plugins[plugin.info()['name']] = plugin
-
-      except TypeError:
-        # TODO(gr3atwh173): add logging
-        pass
-
-      except: # pylint: disable=bare-except
-        # Something probably went wrong in 'verify_status()'
-        pass
