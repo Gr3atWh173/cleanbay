@@ -13,6 +13,7 @@ Currently supported trackers are:
 2. YTS
 3. EZTV
 4. LinuxTracker
+5. Libgen
 
 ## Live instances
 
@@ -96,6 +97,7 @@ Categories are mapped like so:
 "cinema"     => CINEMA: Plugins that track movies
 "tv"         => TV: Plugins that track shows on TV, OTT or anything that's not a movie
 "software"   => SOFTWARE: Plugins that track software excluding games
+"books"      => BOOKS: Plugins that index books or audiobooks
 ```
 ---
 
