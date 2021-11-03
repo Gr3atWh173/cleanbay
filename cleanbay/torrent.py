@@ -12,6 +12,7 @@ class Category(Enum):
     CINEMA: Plugins that track movies
     TV: Plugins that track shows on TV, OTT or anything that's not a movie
     SOFTWARE: Plugins that track software excluding games
+    BOOKS: Plugins that index books or audiobooks
     
   """
   ALL = 0

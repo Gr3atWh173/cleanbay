@@ -73,6 +73,7 @@ poetry run uvicorn app:app
       "search_term": "...",
       "length": 123,
       "cache_hit": true,
+      "elapsed": 2.324,
       "data": [
         {
           "name": "...",
@@ -83,7 +84,6 @@ poetry run uvicorn app:app
           "uploader": "...",
           "uploaded_at": "..."
         },
-        ...
       ]
   }
   ```

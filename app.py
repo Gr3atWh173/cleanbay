@@ -2,6 +2,7 @@
 import os
 from typing import Tuple
 from itertools import chain
+from datetime import datetime, timedelta
 
 from cleanbay.backend import Backend, InvalidSearchError
 from cleanbay.torrent import Category
@@ -69,7 +70,8 @@ CATEGORY_MAP = {
   'general': Category.GENERAL,
   'cinema': Category.CINEMA,
   'tv': Category.TV,
-  'software': Category.SOFTWARE
+  'software': Category.SOFTWARE,
+  'books': Category.BOOKS,
 }
 
 
@@ -97,6 +99,7 @@ async def search(request: Request, response: Response, sq: SearchQuery):
 
   s_term, i_cats, e_cats, i_sites, e_sites = parse_search_query(sq)
 
+  start_time = datetime.now()
   try:
     listings, cache_hit = await backend.search(
       search_term=s_term,
@@ -111,19 +114,22 @@ async def search(request: Request, response: Response, sq: SearchQuery):
   except InvalidSearchError:
     response.status_code = 400
     return make_error("Invalid search.")
+  elapsed = datetime.now() - start_time
 
-  return make_search_response(s_term, listings, cache_hit)
+  return make_search_response(s_term, listings, cache_hit, elapsed)
 
 
 def make_search_response(
   search_term: str,
   listings: list,
-  cache_hit: bool
+  cache_hit: bool,
+  elapsed: timedelta
 ) -> dict:
   return {
     'search_term': search_term,
     'length': len(listings),
     'cache_hit': cache_hit,
+    'elapsed': elapsed,
     'data': listings
   }
 
