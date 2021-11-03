@@ -19,6 +19,7 @@ class Category(Enum):
   CINEMA = 2
   TV = 3
   SOFTWARE = 4
+  BOOKS = 5
 
 
 @dataclass
