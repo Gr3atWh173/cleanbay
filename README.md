@@ -1,6 +1,9 @@
 # Cleanbay
 A metasearch engine for torrents
 
+**Note**: The frontend code lives in
+[this repo](https://github.com/gr3atwh173/cleanbay-frontend)
+
 0. [Supported trackers](#supported-trackers)
 1. [Live instances](#live-instances)
 2. [Setup](#setup)

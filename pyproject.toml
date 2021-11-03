@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cleanbay"
-version = "0.1.0"
+version = "0.2.0.beta"
 description = "A metasearch engine for torrents"
 authors = ["Gr3atWh173"]
 license = "MIT"
