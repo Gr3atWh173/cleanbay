@@ -73,7 +73,7 @@ poetry run uvicorn app:app
   and returns JSON with the following structure:
   ```json
   {
-      "search_term": "...",
+      "status": "ok", 
       "length": 123,
       "cache_hit": true,
       "elapsed": 2.324,
@@ -89,6 +89,13 @@ poetry run uvicorn app:app
         },
       ]
   }
+  ```
+  in case of an error, the following is returned:
+  ```json
+    {
+        "status": "error",
+        "msg": "why it happened"
+    }
   ```
 ---
 **NOTE**

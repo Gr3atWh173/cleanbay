@@ -93,9 +93,10 @@ def status(request: Request, response: Response):
 @limiter.limit(rate_limit)
 async def search(request: Request, response: Response, sq: SearchQuery):
   """Searches the relevant plugins for torrents"""
-  if not is_valid(sq):
+  is_valid, msg = validate(sq)
+  if not is_valid:
     response.status_code = 400
-    return make_error('Invalid search query.')
+    return make_error(msg)
 
   s_term, i_cats, e_cats, i_sites, e_sites = parse_search_query(sq)
 
@@ -126,7 +127,7 @@ def make_search_response(
   elapsed: timedelta
 ) -> dict:
   return {
-    'search_term': search_term,
+    'status': 'ok',
     'length': len(listings),
     'cache_hit': cache_hit,
     'elapsed': elapsed,
@@ -138,28 +139,29 @@ def make_error(msg: str) -> dict:
   return {'status': 'error', 'msg': msg}
 
 
-def is_valid(sq: SearchQuery) -> bool:
+def validate(sq: SearchQuery) -> bool:
   # we should atleast have a search_term
   if sq.search_term.strip() == '':
-    return False
+    return (False, 'No search term given')
 
   # should only use inclusion or exclusion per filter
   if sq.include_categories and sq.exclude_categories:
-    return False
+    return (False, 'Cannot use include and exclude categories together.')
   if sq.include_sites and sq.exclude_sites:
-    return False
+    return (False, 'Cannot use include and exclude sites together.')
 
   # each filter should have valid values
+  categories = list(CATEGORY_MAP.keys())
   for cat in chain(sq.include_categories, sq.exclude_categories):
-    if cat not in CATEGORY_MAP.keys():
-      return False
+    if cat not in categories:
+      return (False, f'No "{cat}" category. Perhaps you meant {", ".join(categories[:-2])}' + f' or {categories[-1]}')
 
-  indexed_sites = backend.state()[0]
+  indexed_sites = list(backend.state()[0])
   for site in chain(sq.include_sites, sq.exclude_sites):
     if site not in indexed_sites:
-      return False
+      return (False, f'For now, "{site}" is not indexed. Perhaps you meant {", ".join(indexed_sites[:-2])}' + f' or {indexed_sites[-1]}')
 
-  return True
+  return (True, '')
 
 
 def parse_search_query(sq: SearchQuery) -> Tuple:
