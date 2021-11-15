@@ -154,12 +154,12 @@ def validate(sq: SearchQuery) -> bool:
   categories = list(CATEGORY_MAP.keys())
   for cat in chain(sq.include_categories, sq.exclude_categories):
     if cat not in categories:
-      return False, f'No "{cat}" category. Perhaps you meant {", ".join(categories[:-2])} or {categories[-1]}'
+      return False, f'No "{cat}" category. Perhaps you meant {", ".join(categories[:-1])} or {categories[-1]}'
 
   indexed_sites = list(backend.state()[0])
   for site in chain(sq.include_sites, sq.exclude_sites):
     if site not in indexed_sites:
-      return False, f'For now, "{site}" is not indexed. Perhaps you meant {", ".join(indexed_sites[:-2])} or {indexed_sites[-1]}'
+      return False, f'For now, "{site}" is not indexed. Perhaps you meant {", ".join(indexed_sites[:-1])} or {indexed_sites[-1]}'
 
   return True, ''
 
