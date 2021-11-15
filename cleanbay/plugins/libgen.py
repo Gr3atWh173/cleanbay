@@ -2,6 +2,8 @@ from urllib.parse import quote as uri_quote
 import asyncio # pylint: disable=unused-import
 import aiohttp
 
+import requests
+
 from bs4 import BeautifulSoup, SoupStrainer
 
 from ..torrent import Torrent, Category
@@ -9,7 +11,8 @@ from ..abstract_plugin import AbstractPlugin
 
 class CBPlugin(AbstractPlugin):
   def verify_status(self) -> bool:
-    return True
+    domain = self.info()['domain']
+    return requests.get(domain).status_code == 200
 
   async def search(
     self,
