@@ -29,7 +29,7 @@ class CBPlugin(AbstractPlugin):
     domain, useragent = self.info()['domain'], self.info()['user-agent']
 
     resp = await session.get(
-        domain + '/q.php?q=' + search_param + '&cat=',
+        f'{domain}/q.php?q={search_param}&cat=',
         headers={'user-agent': useragent})
 
     if resp.status != 200:

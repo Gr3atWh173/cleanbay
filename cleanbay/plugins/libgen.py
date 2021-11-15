@@ -38,20 +38,29 @@ class CBPlugin(AbstractPlugin):
       size = cols[7].text
       download = cols[9].find('a')['href']
 
-      name = f'[{author}] {title}'
-      
-      info = '('
-      if publisher:
-        info += publisher + ', '
-      if year:
-        info += year + ', '
-      if pages:
-        info += pages + 'p'
-      info += ')'
-      
-      if info != '()':
-        name += ' ' + info
+      # construct the name
+      name = []
+      if author:
+        name.append(f'[{author}]')
+      if title:
+        name.append(title)
+      name = ' '.join(name)
 
+      # construct additional info
+      info = []
+      if publisher:
+        info.append(publisher)
+      if language:
+        info.append(language)
+      if year:
+        info.append(year)
+      if pages:
+        info.append(f'{pages}p')
+      info = ', '.join(info)
+
+      if info:
+        name += f' ({info})'
+      
       torrents.append(Torrent(
         name,
         download,

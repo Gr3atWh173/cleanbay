@@ -1,3 +1,4 @@
+"""Contains PluginsManager and NoPluginsError"""
 from importlib import import_module
 from os.path import isfile, basename
 import glob
@@ -9,11 +10,24 @@ class NoPluginsError(Exception):
 
 
 class PluginsManager:
+  """Manages the loading and filtering of plugins.
+
+  Attributes:
+    plugins (dict): Plugin objects hashed by their names
+
+  """
+
   def __init__(self, directory: str):
+    """Loads the plugins.
+
+    Arguments:
+      directory (str): The directory to load the plugins from.
+
+    """
     self.plugins = {}
 
-    # import all the files ending with `.py` except __init__ 
-    modules = glob.glob(directory + '/*.py')
+    # import all the files ending with `.py` except __init__
+    modules = glob.glob(f'{directory}/*.py')
     plugins = [import_module(f'cleanbay.plugins.{basename(f)[:-3]}')
                for f in modules if isfile(f) and not f.endswith('__init__.py')]
 
@@ -27,14 +41,14 @@ class PluginsManager:
           continue
         if ('name' not in info) or ('category' not in info):
           continue
-        
+
         self.plugins[info['name']] = plugin
       except TypeError:
         # TODO(gr3atwh173): add logging
         pass
       except: # pylint: disable=bare-except
         pass
-  
+
   def filter_plugins(
     self,
     include_categories: list,
@@ -56,14 +70,14 @@ class PluginsManager:
 
     Returns:
       A list of filtered plugin objects.
-    
+
     Raises:
       NoPluginsError: if there are no usable plugins
 
     """
     if not self.plugins:
       raise NoPluginsError()
-    
+
     filtered_plugins = set(self.plugins.values())
 
     # categories
