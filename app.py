@@ -26,7 +26,8 @@ from dotenv import load_dotenv
 load_dotenv()
 config = {
   'pluginsDirectory': os.getenv('PLUGINS_DIRECTORY', './cleanbay/plugins'),
-  'cacheSize': int(os.getenv('CACHE_SIZE', '128'))
+  'cacheSize': int(os.getenv('CACHE_SIZE', '128')),
+  'cacheTimeout': int(os.getenv('CACHE_TIMEOUT', '5'))
 }
 rate_limit = os.getenv('RATE_LIMIT', '100/minute')
 allowed_origin = os.getenv('ALLOWED_ORIGIN', '*')
@@ -111,17 +112,16 @@ async def search(request: Request, response: Response, sq: SearchQuery):
     )
   except NoPluginsError:
     response.status_code = 500
-    return make_error("No searchable plugins.")
+    return make_error('No searchable plugins.')
   except InvalidSearchError:
     response.status_code = 400
-    return make_error("Invalid search.")
+    return make_error('Invalid search.')
   elapsed = datetime.now() - start_time
 
-  return make_search_response(s_term, listings, cache_hit, elapsed)
+  return make_search_response(listings, cache_hit, elapsed)
 
 
 def make_search_response(
-  search_term: str,
   listings: list,
   cache_hit: bool,
   elapsed: timedelta
@@ -154,14 +154,14 @@ def validate(sq: SearchQuery) -> bool:
   categories = list(CATEGORY_MAP.keys())
   for cat in chain(sq.include_categories, sq.exclude_categories):
     if cat not in categories:
-      return (False, f'No "{cat}" category. Perhaps you meant {", ".join(categories[:-2])}' + f' or {categories[-1]}')
+      return False, f'No "{cat}" category. Perhaps you meant {", ".join(categories[:-2])} or {categories[-1]}'
 
   indexed_sites = list(backend.state()[0])
   for site in chain(sq.include_sites, sq.exclude_sites):
     if site not in indexed_sites:
-      return (False, f'For now, "{site}" is not indexed. Perhaps you meant {", ".join(indexed_sites[:-2])}' + f' or {indexed_sites[-1]}')
+      return False, f'For now, "{site}" is not indexed. Perhaps you meant {", ".join(indexed_sites[:-2])} or {indexed_sites[-1]}'
 
-  return (True, '')
+  return True, ''
 
 
 def parse_search_query(sq: SearchQuery) -> Tuple:

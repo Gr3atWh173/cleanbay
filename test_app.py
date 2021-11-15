@@ -1,23 +1,19 @@
 """Integration tests for the app"""
 import re
+from os import getenv
+from time import sleep
 
 from fastapi.testclient import TestClient
+
+from dotenv import load_dotenv
 
 from app import app
 
 
+load_dotenv()
+cache_timeout = int(getenv('CACHE_TIMEOUT', '5'))
+
 client = TestClient(app)
-
-
-def is_valid_url(url: str) -> bool:
-  regex = re.compile(
-    r'^(?:http|ftp)s?://' # http:// or https://
-    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
-    r'localhost|' #localhost...
-    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
-    r'(?::\d+)?' # optional port
-    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-  return re.match(regex, url) is not None
 
 
 def test_status():
@@ -186,3 +182,57 @@ def test_cache():
 
   assert response_first.json()['cache_hit'] is False
   assert response_second.json()['cache_hit'] is True
+
+
+def test_cache_timeout():
+  response_first = client.post('/api/v1/search', json={
+    'search_term': 'godfather',
+    'include_categories': [],
+    'exclude_categories': [],
+    'include_sites': ['yts'],
+    'exclude_sites': []
+  })
+
+  response_second = client.post('/api/v1/search', json={
+    'search_term': 'godfather',
+    'include_categories': [],
+    'exclude_categories': [],
+    'include_sites': ['yts'],
+    'exclude_sites': []
+  })
+
+  assert response_first.json()['cache_hit'] == False
+  assert response_second.json()['cache_hit'] == True
+  
+  sleep(cache_timeout)
+
+  response_third = client.post('/api/v1/search', json={
+    'search_term': 'godfather',
+    'include_categories': [],
+    'exclude_categories': [],
+    'include_sites': ['yts'],
+    'exclude_sites': []
+  })
+
+  response_fourth = client.post('/api/v1/search', json={
+    'search_term': 'godfather',
+    'include_categories': [],
+    'exclude_categories': [],
+    'include_sites': ['yts'],
+    'exclude_sites': []
+  })
+
+  assert response_third.json()['cache_hit'] == False
+  assert response_fourth.json()['cache_hit'] == True
+
+# ================ utility functions =====================
+
+def is_valid_url(url: str) -> bool:
+  regex = re.compile(
+    r'^(?:http|ftp)s?://' # http:// or https://
+    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+    r'localhost|' #localhost...
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+    r'(?::\d+)?' # optional port
+    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+  return re.match(regex, url) is not None

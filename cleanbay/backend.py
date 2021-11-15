@@ -1,11 +1,11 @@
 """Manages the plugins and the cache."""
-from urllib.parse import urlparse
-
 import asyncio
-import aiohttp
+
+from aiohttp import ClientSession, TCPConnector
 
 from typing import Tuple
 
+from .cache_manager import CacheManager
 from .plugins_manager import PluginsManager
 
 
@@ -32,14 +32,20 @@ class Backend:
     """Initializes the backend object.
 
     Arguments:
-      config (dict): a dictionary containing the 'pluginsDirectory' and 
-      'cacheSize' keys.
+      config (dict): a dictionary containing the 'pluginsDirectory', 'cacheSize'
+      and 'cacheTimeout' keys.
 
     """
     self.config = config
-    self.cache = {} # TODO(gr3atwh173): make cache its own module
+    self.cache = CacheManager(config['cacheSize'], config['cacheTimeout'])
     self.plugins_manager = PluginsManager(config['pluginsDirectory'])
-    
+
+  def state(self):
+    plugins = self.plugins_manager.plugins.keys()
+    is_ok = bool(plugins)
+
+    return (plugins, is_ok)
+
   async def search(
     self,
     search_term: str,
@@ -81,7 +87,7 @@ class Backend:
     if include_categories and exclude_categories \
       or include_sites and exclude_sites:
       raise InvalidSearchError()
-    
+
     search_term = search_term.lower()
 
     plugins = self.plugins_manager.filter_plugins(
@@ -107,13 +113,12 @@ class Backend:
       cache hit or not.
 
     """
-    key_tuple = (search_param, frozenset(plugins))
+    cache_hit = self.cache.read(search_param, plugins)
 
-    if key_tuple in self.cache:
-      self.cache[key_tuple]['hit_count'] += 1
-      return (self.cache[key_tuple]['listings'], True)
+    if not cache_hit:
+      return [], False
 
-    return ([], False)
+    return cache_hit, True
 
   async def update_cache(self, search_param: str, plugins: list) -> list:
     """Updates the cache.
@@ -132,20 +137,12 @@ class Backend:
       List of torrents matching the search query
 
     """
-    search_future = self.search_plugins(search_param, plugins)
-    results = await search_future
+    results = await self.search_plugins(search_param, plugins)
 
     if not results:
       return []
 
-    if self.config['cacheSize'] <= len(self.cache):
-      del self.cache[self.least_frequently_used()]
-
-    key_tuple = (search_param, frozenset(plugins))
-    self.cache[key_tuple] = {
-        'listings': results,
-        'hit_count': 1
-    }
+    self.cache.store(search_param, plugins, results)
 
     return results
 
@@ -166,9 +163,7 @@ class Backend:
     """
     results = []
 
-    async with aiohttp.ClientSession(
-      connector=aiohttp.TCPConnector(ssl=False)
-    ) as session:
+    async with ClientSession(connector=TCPConnector(ssl=False)) as session:
       tasks = self.create_search_tasks(session, search_param, plugins)
       results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -178,7 +173,7 @@ class Backend:
 
   def create_search_tasks(
     self,
-    session: aiohttp.ClientSession,
+    session: ClientSession,
     search_param: str,
     plugins: list
   ) -> list:
@@ -190,18 +185,9 @@ class Backend:
       tasks.append(task)
 
     return tasks
-  
-  def state(self):
-    plugins = self.plugins_manager.plugins.keys()
-    is_ok = True if plugins else False
-
-    return (plugins, is_ok)
 
   def exclude_errors(self, listings: list):
     return [listing for listing in listings if isinstance(listing, list)]
 
   def flatten(self, t: list) -> list:
     return [item for sublist in t for item in sublist]
-
-  def least_frequently_used(self):
-    return min(self.cache.items(), key=lambda x: x['hit_count'])
