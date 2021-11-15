@@ -49,6 +49,9 @@ RATE_LIMIT="100/minute"
 # cache size in 'entries'
 CACHE_SIZE=128
 
+# time (in seconds) before a cache item is invalidated
+CACHE_TIMEOUT=300
+
 # domain allowed to make cross-origin requests to the server
 # '*' allows for any domain to request data
 ALLOWED_ORIGIN="*"
