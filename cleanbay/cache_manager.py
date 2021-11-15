@@ -93,4 +93,4 @@ class CacheManager:
     return (search_term, frozenset(names))
 
   def least_frequently_used(self):
-    return min(self.cache.items(), key=lambda x: x[1]['hit_count'])
+    return min(self.cache.items(), key=lambda x: x[1]['hit_count'])[0]
