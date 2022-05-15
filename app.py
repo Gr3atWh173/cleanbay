@@ -27,7 +27,8 @@ load_dotenv()
 config = {
   'pluginsDirectory': os.getenv('PLUGINS_DIRECTORY', './cleanbay/plugins'),
   'cacheSize': int(os.getenv('CACHE_SIZE', '128')),
-  'cacheTimeout': int(os.getenv('CACHE_TIMEOUT', '5'))
+  'cacheTimeout': int(os.getenv('CACHE_TIMEOUT', '300')),
+  'sessionTimeout': int(os.getenv('SESSION_TIMEOUT', '8'))
 }
 rate_limit = os.getenv('RATE_LIMIT', '100/minute')
 allowed_origin = os.getenv('ALLOWED_ORIGIN', '*')

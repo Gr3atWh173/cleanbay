@@ -1,7 +1,7 @@
 """Manages the plugins and the cache."""
 import asyncio
 
-from aiohttp import ClientSession, TCPConnector
+from aiohttp import ClientSession, ClientTimeout, TCPConnector
 
 from typing import Tuple
 
@@ -32,11 +32,11 @@ class Backend:
     """Initializes the backend object.
 
     Arguments:
-      config (dict): a dictionary containing the 'pluginsDirectory', 'cacheSize'
-      and 'cacheTimeout' keys.
+      config (dict): a dictionary containing the 'pluginsDirectory', 'cacheSize',
+      'sessionTimeout' and 'cacheTimeout' keys.
 
     """
-    self.config = config
+    self.timeout = config['sessionTimeout']
     self.cache = CacheManager(config['cacheSize'], config['cacheTimeout'])
     self.plugins_manager = PluginsManager(config['pluginsDirectory'])
 
@@ -163,7 +163,10 @@ class Backend:
     """
     results = []
 
-    async with ClientSession(connector=TCPConnector(ssl=False)) as session:
+    session_timeout = ClientTimeout(total=self.timeout)
+    async with ClientSession(
+      connector=TCPConnector(ssl=False), timeout=session_timeout
+    ) as session:
       tasks = self.create_search_tasks(session, search_param, plugins)
       results = await asyncio.gather(*tasks, return_exceptions=True)
 
