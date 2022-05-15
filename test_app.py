@@ -11,7 +11,7 @@ from app import app
 
 
 load_dotenv()
-cache_timeout = int(getenv('CACHE_TIMEOUT', '5'))
+cache_timeout = int(getenv('CACHE_TIMEOUT', '300'))
 
 client = TestClient(app)
 
