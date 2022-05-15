@@ -6,7 +6,7 @@ authors = ["Gr3atWh173"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "3.8.1"
+python = "^3.8.1"
 beautifulsoup4 = "^4.10.0"
 lxml = "^4.6.5"
 requests = "^2.26.0"
