@@ -5,7 +5,7 @@ from aiohttp import ClientSession, ClientTimeout, TCPConnector
 
 from typing import Tuple
 
-from .cache_manager import CacheManager
+from .cache_manager import AbstractCacheManager
 from .plugins_manager import PluginsManager
 
 
@@ -28,17 +28,23 @@ class Backend:
 
   """
 
-  def __init__(self, config: dict):
+  def __init__(
+    self,
+    request_timeout: int,
+    cache_manager: AbstractCacheManager,
+    plugins_manager: PluginsManager
+  ):
     """Initializes the backend object.
 
     Arguments:
-      config (dict): a dictionary containing the 'pluginsDirectory', 'cacheSize',
-      'sessionTimeout' and 'cacheTimeout' keys.
+      request_timeout (int): Timeout for requests to external services (in seconds)
+      cache_manager (AbstractCacheManager): A concrete implementation for a cache
+      plugins_manager (PluginsManager): A concrete implementation for managing plugins.
 
     """
-    self.timeout = config['sessionTimeout']
-    self.cache = CacheManager(config['cacheSize'], config['cacheTimeout'])
-    self.plugins_manager = PluginsManager(config['pluginsDirectory'])
+    self.timeout = request_timeout
+    self.cache = cache_manager
+    self.plugins_manager = plugins_manager
 
   def state(self):
     plugins = self.plugins_manager.plugins.keys()

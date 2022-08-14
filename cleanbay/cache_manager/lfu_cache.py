@@ -1,9 +1,12 @@
-"""Contains the cache manager"""
+"""Contains the implementation for LFU-based cache manager"""
 from datetime import datetime, timedelta
 
 from typing import Tuple
 
-class CacheManager:
+from cleanbay.cache_manager.abstract_cache_manager import AbstractCacheManager
+
+
+class LFUCache(AbstractCacheManager):
   """Manages an LFU cache with a timeout.
 
   Attributes:

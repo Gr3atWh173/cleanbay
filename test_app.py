@@ -149,18 +149,18 @@ def test_include_exclude_sites():
 
 def test_advanced_search():
   response = client.post('/api/v1/search', json={
-    'search_term': 'star trek',
-    'include_categories': ['tv'],
+    'search_term': 'alpine',
+    'include_categories': ['software'],
     'exclude_categories': [],
     'include_sites': [],
-    'exclude_sites': ['linuxtracker', 'piratebay']
+    'exclude_sites': ['eztv', 'piratebay']
   })
 
   assert response.status_code == 200
   assert response.json()['length'] > 0
 
   for listing in response.json()['data']:
-    assert listing['uploader'] in ['eztv', 'yts']
+    assert listing['uploader'] not in ['eztv', 'piratebay']
 
 
 def test_cache():

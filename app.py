@@ -4,10 +4,6 @@ from typing import Tuple
 from itertools import chain
 from datetime import datetime, timedelta
 
-from cleanbay.backend import Backend, InvalidSearchError
-from cleanbay.torrent import Category
-from cleanbay.plugins_manager import NoPluginsError
-
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import Response
@@ -21,20 +17,24 @@ from pydantic import BaseModel
 
 from dotenv import load_dotenv
 
+from cleanbay.backend import Backend, InvalidSearchError
+from cleanbay.torrent import Category
+from cleanbay.plugins_manager import NoPluginsError, PluginsManager
+from cleanbay.cache_manager import LFUCache
 
 # load the config data
 load_dotenv()
-config = {
-  'pluginsDirectory': os.getenv('PLUGINS_DIRECTORY', './cleanbay/plugins'),
-  'cacheSize': int(os.getenv('CACHE_SIZE', '128')),
-  'cacheTimeout': int(os.getenv('CACHE_TIMEOUT', '300')),
-  'sessionTimeout': int(os.getenv('SESSION_TIMEOUT', '8'))
-}
+plugins_directory = os.getenv('PLUGINS_DIRECTORY', './cleanbay/plugins')
+cache_size = int(os.getenv('CACHE_SIZE', '128'))
+cache_timeout = int(os.getenv('CACHE_TIMEOUT', '300'))
+session_timeout = int(os.getenv('SESSION_TIMEOUT', '8'))
 rate_limit = os.getenv('RATE_LIMIT', '100/minute')
 allowed_origin = os.getenv('ALLOWED_ORIGIN', '*')
 
 # initialize tha app and the backend
-backend = Backend(config)
+cache_manager = LFUCache(cache_size, cache_timeout)
+plugins_manager = PluginsManager(plugins_directory)
+backend = Backend(session_timeout, cache_manager, plugins_manager)
 
 app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
@@ -80,7 +80,7 @@ CATEGORY_MAP = {
 # define routes
 @app.get('/api/v1/status')
 @limiter.limit(rate_limit)
-def status(request: Request, response: Response):
+def status(request: Request, response: Response): # pylint: disable=unused-argument
   """Returns the current status and list of available plugins"""
   plugins, is_ok = backend.state()
   status_word = 'ok' if is_ok else 'not ok'
@@ -93,7 +93,7 @@ def status(request: Request, response: Response):
 
 @app.post('/api/v1/search')
 @limiter.limit(rate_limit)
-async def search(request: Request, response: Response, sq: SearchQuery):
+async def search(request: Request, response: Response, sq: SearchQuery): # pylint: disable=unused-argument
   """Searches the relevant plugins for torrents"""
   is_valid, msg = validate(sq)
   if not is_valid:
@@ -155,12 +155,14 @@ def validate(sq: SearchQuery) -> bool:
   categories = list(CATEGORY_MAP.keys())
   for cat in chain(sq.include_categories, sq.exclude_categories):
     if cat not in categories:
-      return False, f'No "{cat}" category. Perhaps you meant {", ".join(categories[:-1])} or {categories[-1]}'
+      or_string = f'{", ".join(categories[:-1])} or {categories[-1]}'
+      return False, f'No "{cat}" category. Perhaps you meant {or_string}'
 
   indexed_sites = list(backend.state()[0])
   for site in chain(sq.include_sites, sq.exclude_sites):
     if site not in indexed_sites:
-      return False, f'For now, "{site}" is not indexed. Perhaps you meant {", ".join(indexed_sites[:-1])} or {indexed_sites[-1]}'
+      or_string = f'{", ".join(indexed_sites[:-1])} or {indexed_sites[-1]}'
+      return False, f'For now, "{site}" is not indexed. Perhaps you meant {or_string}'
 
   return True, ''
 
