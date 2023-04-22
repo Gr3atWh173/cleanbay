@@ -20,6 +20,7 @@ Currently supported trackers are:
 3. EZTV
 4. LinuxTracker
 5. Libgen
+6. Nyaa
 
 ## Live instances
 
