@@ -1,5 +1,4 @@
 """Serves the API that enables searching the backend"""
-import os
 from typing import Tuple
 from itertools import chain
 from datetime import datetime, timedelta
@@ -15,26 +14,16 @@ from slowapi.errors import RateLimitExceeded
 
 from pydantic import BaseModel
 
-from dotenv import load_dotenv
-
 from cleanbay.backend import Backend, InvalidSearchError
 from cleanbay.torrent import Category
 from cleanbay.plugins_manager import NoPluginsError, PluginsManager
 from cleanbay.cache_manager import LFUCache
-
-# load the config data
-load_dotenv()
-plugins_directory = os.getenv('PLUGINS_DIRECTORY', './cleanbay/plugins')
-cache_size = int(os.getenv('CACHE_SIZE', '128'))
-cache_timeout = int(os.getenv('CACHE_TIMEOUT', '300'))
-session_timeout = int(os.getenv('SESSION_TIMEOUT', '8'))
-rate_limit = os.getenv('RATE_LIMIT', '100/minute')
-allowed_origin = os.getenv('ALLOWED_ORIGIN', '*')
+from cleanbay.settings import settings
 
 # initialize tha app and the backend
-cache_manager = LFUCache(cache_size, cache_timeout)
-plugins_manager = PluginsManager(plugins_directory)
-backend = Backend(session_timeout, cache_manager, plugins_manager)
+cache_manager = LFUCache(settings.cache_size, settings.cache_timeout)
+plugins_manager = PluginsManager(settings.plugins_directory)
+backend = Backend(settings.session_timeout, cache_manager, plugins_manager)
 
 app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
@@ -42,7 +31,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
   CORSMiddleware,
-  allow_origins=[allowed_origin],
+  allow_origins=[settings.allowed_origin],
   allow_credentials=True,
   allow_methods=['*'],
   allow_headers=['*']
@@ -79,7 +68,7 @@ CATEGORY_MAP = {
 
 # define routes
 @app.get('/api/v1/status')
-@limiter.limit(rate_limit)
+@limiter.limit(settings.rate_limit)
 def status(request: Request, response: Response): # pylint: disable=unused-argument
   """Returns the current status and list of available plugins"""
   plugins, is_ok = backend.state()
@@ -92,7 +81,7 @@ def status(request: Request, response: Response): # pylint: disable=unused-argum
 
 
 @app.post('/api/v1/search')
-@limiter.limit(rate_limit)
+@limiter.limit(settings.rate_limit)
 async def search(request: Request, response: Response, sq: SearchQuery): # pylint: disable=unused-argument
   """Searches the relevant plugins for torrents"""
   is_valid, msg = validate(sq)
@@ -188,4 +177,4 @@ def parse_search_query(sq: SearchQuery) -> Tuple:
 
 if __name__ == '__main__':
   import uvicorn
-  uvicorn.run(app, debug=True)
+  uvicorn.run(app, reload=True)
