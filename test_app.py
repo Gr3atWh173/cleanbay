@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from dotenv import load_dotenv
 
-from app import app
+from app.main import app
 
 
 load_dotenv()
@@ -28,14 +28,10 @@ def test_empty_search():
         "/api/v1/search",
         json={
             "search_term": "",
-            "include_categories": [],
-            "exclude_categories": [],
-            "include_sites": [],
-            "exclude_sites": [],
         },
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_simple_search():
@@ -43,10 +39,6 @@ def test_simple_search():
         "/api/v1/search",
         json={
             "search_term": "star wars",
-            "include_categories": [],
-            "exclude_categories": [],
-            "include_sites": [],
-            "exclude_sites": [],
         },
     )
 
@@ -65,9 +57,6 @@ def test_include_site():
         json={
             "search_term": "kali",
             "include_categories": ["software"],
-            "exclude_categories": [],
-            "include_sites": [],
-            "exclude_sites": [],
         },
     )
 
@@ -86,10 +75,7 @@ def test_exclude_categories():
         "/api/v1/search",
         json={
             "search_term": "alpine",
-            "include_categories": [],
             "exclude_categories": ["software"],
-            "include_sites": [],
-            "exclude_sites": [],
         },
     )
 
@@ -110,12 +96,10 @@ def test_include_exclude_categories():
             "search_term": "alpine",
             "include_categories": ["software"],
             "exclude_categories": ["cinema"],
-            "include_sites": [],
-            "exclude_sites": [],
         },
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_include_sites():
@@ -123,10 +107,7 @@ def test_include_sites():
         "/api/v1/search",
         json={
             "search_term": "kali",
-            "include_categories": [],
-            "exclude_categories": [],
             "include_sites": ["linuxtracker"],
-            "exclude_sites": [],
         },
     )
 
@@ -145,9 +126,6 @@ def test_exclude_sites():
         "/api/v1/search",
         json={
             "search_term": "alpine",
-            "include_categories": [],
-            "exclude_categories": [],
-            "include_sites": [],
             "exclude_sites": ["linuxtracker"],
         },
     )
@@ -167,14 +145,12 @@ def test_include_exclude_sites():
         "/api/v1/search",
         json={
             "search_term": "kali",
-            "include_categories": [],
-            "exclude_categories": [],
             "include_sites": ["linuxtracker"],
             "exclude_sites": ["yts"],
         },
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_advanced_search():
@@ -183,8 +159,6 @@ def test_advanced_search():
         json={
             "search_term": "alpine",
             "include_categories": ["software"],
-            "exclude_categories": [],
-            "include_sites": [],
             "exclude_sites": ["eztv", "piratebay"],
         },
     )
@@ -201,10 +175,7 @@ def test_cache():
         "/api/v1/search",
         json={
             "search_term": "dune",
-            "include_categories": [],
-            "exclude_categories": [],
             "include_sites": ["yts"],
-            "exclude_sites": [],
         },
     )
 
@@ -212,10 +183,7 @@ def test_cache():
         "/api/v1/search",
         json={
             "search_term": "dune",
-            "include_categories": [],
-            "exclude_categories": [],
             "include_sites": ["yts"],
-            "exclude_sites": [],
         },
     )
 

@@ -1,4 +1,5 @@
 """Contains the app settings"""
+
 from pydantic_settings import BaseSettings
 
 
