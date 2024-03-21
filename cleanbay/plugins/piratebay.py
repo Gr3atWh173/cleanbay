@@ -1,26 +1,31 @@
+"""Contains the impl for the piratebay plugin"""
+
 from requests import get as get_sync
 from urllib.parse import quote as uri_quote
 from datetime import datetime, timezone
 
-import asyncio  # pylint: disable=unused-import
 import math
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent, Category
 
 
-class CBPlugin(AbstractPlugin):
+class CBPlugin(AbstractPlugin):  # pylint: disable=missing-class-docstring
     def info(self):
         return {
             "name": "piratebay",
             "category": Category.GENERAL,
             "domain": "https://apibay.org",
+            # pylint: disable=line-too-long
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
         }
 
     def verify_status(self):
         domain, useragent = self.info()["domain"], self.info()["user-agent"]
-        return get_sync(domain, headers={"user-agent": useragent}).status_code != 500
+        return (
+            get_sync(domain, headers={"user-agent": useragent}, timeout=10).status_code
+            != 500
+        )
 
     async def search(self, session, search_param):
         domain, useragent = self.info()["domain"], self.info()["user-agent"]

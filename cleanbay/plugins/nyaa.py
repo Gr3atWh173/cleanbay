@@ -1,14 +1,15 @@
+"""Contains the impl for the nyaa plugin"""
+
 from bs4 import BeautifulSoup, SoupStrainer
 from requests import get as sync_get
-import asyncio  # pylint: disable=unused-import
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent, Category
 
 
-class CBPlugin(AbstractPlugin):
+class CBPlugin(AbstractPlugin):  # pylint: disable=missing-class-docstring
     def verify_status(self):
-        return sync_get(self.info()["domain"]).status_code == 200
+        return sync_get(self.info()["domain"], timeout=10).status_code == 200
 
     async def search(self, session, search_param):
         info = self.info()

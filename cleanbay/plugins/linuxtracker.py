@@ -1,12 +1,13 @@
+"""Contains the impl for the linuxtracker plugin"""
+
 from bs4 import BeautifulSoup
 from requests import get as sync_get
-import asyncio  # pylint: disable=unused-import
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent, Category
 
 
-class CBPlugin(AbstractPlugin):
+class CBPlugin(AbstractPlugin):  # pylint: disable=missing-class-docstring
     def info(self):
         return {
             "name": "linuxtracker",
@@ -16,7 +17,7 @@ class CBPlugin(AbstractPlugin):
 
     def verify_status(self):
         domain = self.info()["domain"]
-        return sync_get(domain).status_code == 200
+        return sync_get(domain, timeout=10).status_code == 200
 
     async def search(self, session, search_param):
         domain = self.info()["domain"]

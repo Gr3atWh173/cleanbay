@@ -1,5 +1,6 @@
+"""Contains the imple for the libgen plugin"""
+
 from urllib.parse import quote as uri_quote
-import asyncio  # pylint: disable=unused-import
 import aiohttp
 
 import requests
@@ -10,10 +11,10 @@ from ..torrent import Torrent, Category
 from ..abstract_plugin import AbstractPlugin
 
 
-class CBPlugin(AbstractPlugin):
+class CBPlugin(AbstractPlugin):  # pylint: disable=missing-class-docstring
     def verify_status(self) -> bool:
         domain = self.info()["domain"]
-        return requests.get(domain).status_code == 200
+        return requests.get(domain, timeout=10).status_code == 200
 
     async def search(self, session: aiohttp.ClientSession, search_param: str) -> list:
         domain = self.info()["domain"]

@@ -1,15 +1,16 @@
+"""Contains the impl for the yts plugin"""
+
 from requests import get as get_sync
 from urllib.parse import quote as uri_quote
-import asyncio  # pylint: disable=unused-import
 
 from ..abstract_plugin import AbstractPlugin
 from ..torrent import Torrent, Category
 
 
-class CBPlugin(AbstractPlugin):
+class CBPlugin(AbstractPlugin):  # pylint: disable=missing-class-docstring
     def verify_status(self) -> bool:
         domain = self.info()["domain"]
-        return get_sync(domain).status_code == 200
+        return get_sync(domain, timeout=10).status_code == 200
 
     def info(self) -> dict:
         return {

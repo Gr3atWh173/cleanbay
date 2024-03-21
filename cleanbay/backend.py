@@ -1,4 +1,5 @@
 """Manages the plugins and the cache."""
+
 import asyncio
 
 from aiohttp import ClientSession, ClientTimeout, TCPConnector
@@ -39,8 +40,8 @@ class Backend:
 
         Arguments:
           request_timeout (int): Timeout for requests to external services (in seconds)
-          cache_manager (AbstractCacheManager): A concrete implementation for a cache
-          plugins_manager (PluginsManager): A concrete implementation for managing plugins.
+          cache_manager (AbstractCacheManager): A concrete impl for a cache
+          plugins_manager (PluginsManager): A concrete impl for managing plugins.
 
         """
         self.timeout = request_timeout
