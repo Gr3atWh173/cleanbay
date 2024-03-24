@@ -74,6 +74,8 @@ poetry run uvicorn app.main:app
 
 ## API endpoints
 
+>**NOTE**: See the [auto-generated swagger docs](https://testbay.onrender.com/docs) for more up-to-date documentation
+
 1. `POST /api/v1/search/` expects
 
 ```json
