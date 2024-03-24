@@ -69,7 +69,7 @@ ALLOWED_ORIGIN="*"
 3. Run the web API
 
 ```
-poetry run uvicorn app:app
+poetry run uvicorn app.main:app
 ```
 
 ## API endpoints
